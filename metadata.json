@@ -1,0 +1,11 @@
+{
+  "name": "AttendSecure - Smart Location-Based Attendance",
+  "description": "Smart Location-Based College Attendance Management System with geolocation radius verification, live camera verification, role-based dashboards, and analytics.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
