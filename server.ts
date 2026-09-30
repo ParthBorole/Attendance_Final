@@ -1,5 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ override: true, quiet: true });
 import express, { Request, Response } from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRouter from './server/routes/auth.js';
@@ -52,17 +54,20 @@ async function startServer() {
   });
 
   if (!isProd) {
-    // Development mode: Mount Vite dev server middleware
+    // Development mode: Mount Vite dev server middleware pointing to client directory
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
+      root: path.resolve(__dirname, 'client'),
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-    console.log('[AttendSecure] Vite dev middleware mounted');
+    console.log('[AttendSecure] Vite dev middleware mounted from client/');
   } else {
-    // Production mode: Serve built frontend from dist
-    const distPath = path.resolve(__dirname, 'dist');
+    // Production mode: Serve built frontend from client/dist or dist
+    const distPath = fs.existsSync(path.resolve(__dirname, 'client/dist'))
+      ? path.resolve(__dirname, 'client/dist')
+      : path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req: Request, res: Response) => {
       res.sendFile(path.resolve(distPath, 'index.html'));

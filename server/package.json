@@ -1,0 +1,29 @@
+{
+  "name": "attendsecure-server",
+  "version": "1.0.0",
+  "description": "AttendSecure Express & Node.js Backend API",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx server.ts",
+    "dev": "node --import tsx server.ts",
+    "create-admin": "node --import tsx createAdmin.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.12",
+    "resend": "^6.31.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

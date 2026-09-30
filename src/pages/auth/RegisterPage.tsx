@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ApiService } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.js';
+import { OtpModal } from './OtpModal.js';
 import {
   ShieldCheck,
   UserPlus,
@@ -49,6 +50,13 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) =
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // OTP Modal State
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string>('');
+  const [emailDelivered, setEmailDelivered] = useState<boolean>(false);
+  const [deliveryNotice, setDeliveryNotice] = useState<string>('');
+  const [receivedOtp, setReceivedOtp] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClasses = async () => {
@@ -117,13 +125,21 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) =
     const res = await ApiService.register(payload);
     setIsLoading(false);
 
-    if (res.success && res.token) {
-      login({
-        token: res.token,
-        user: res.user,
-        student: res.student,
-        faculty: res.faculty,
-      });
+    if (res.success) {
+      if (res.requiresOtp) {
+        setRegisteredEmail(res.email || formData.email.trim().toLowerCase());
+        setEmailDelivered(!!res.emailDelivered);
+        setDeliveryNotice(res.message || 'OTP dispatched to your Gmail.');
+        setReceivedOtp(res.otp || null);
+        setShowOtpModal(true);
+      } else if (res.token) {
+        login({
+          token: res.token,
+          user: res.user,
+          student: res.student,
+          faculty: res.faculty,
+        });
+      }
     } else {
       setError(res.message || 'Registration failed. Please verify the information entered.');
     }
@@ -494,6 +510,26 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSwitchToLogin }) =
           </div>
         </div>
       </div>
+
+      {showOtpModal && (
+        <OtpModal
+          email={registeredEmail}
+          emailDelivered={emailDelivered}
+          deliveryNotice={deliveryNotice}
+          initialOtp={receivedOtp || undefined}
+          purpose="registration"
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={(res) => {
+            setShowOtpModal(false);
+            login({
+              token: res.token,
+              user: res.user,
+              student: res.student,
+              faculty: res.faculty,
+            });
+          }}
+        />
+      )}
     </div>
   );
 };

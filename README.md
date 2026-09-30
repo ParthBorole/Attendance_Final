@@ -40,14 +40,98 @@ AttendSecure is a production-quality full-stack web application developed for **
 
 ---
 
-## 🛠 Tech Stack
+## 📁 Project Architecture & Folder Format
 
-- **Frontend:** React, TypeScript, Tailwind CSS, Leaflet.js, Lucide Icons, Canvas Confetti.
-- **Backend:** Node.js, Express, TypeScript (`tsx`).
-- **Persistence:** Relational JSON/SQLite database storage with ACID file locking and seed initialization.
-- **Security:** bcrypt password/OTP hashing, JWT authentication tokens, server-side parameter re-validation.
+This project follows the clean full-stack monorepo standard with isolated `client/` and `server/` modules:
+
+```text
+AttendSecure/
+├── client/                     # 🌐 FRONTEND (React 19 + TypeScript + Tailwind CSS)
+│   ├── public/                 # Static assets, icons, manifest
+│   ├── src/                    # React Source Code
+│   │   ├── components/         # Modular UI (Navbar, GeofenceMap, Camera, QR, Modals)
+│   │   ├── context/            # AuthContext, NotificationContext
+│   │   ├── pages/              # Role-specific Views
+│   │   │   ├── admin/          # Admin Dashboard & System Settings
+│   │   │   ├── auth/           # Login, Register, OTP Verification Modals
+│   │   │   ├── faculty/        # Lecture Management, Rolling QR & Session Monitoring
+│   │   │   └── student/        # Attendance History, QR Scanner, Face Verification
+│   │   ├── services/           # ApiService (REST client endpoints)
+│   │   ├── types/              # Frontend TypeScript Interfaces
+│   │   ├── App.tsx             # Main React Router & Application Shell
+│   │   ├── index.css           # Tailwind CSS imports & theme styles
+│   │   └── main.tsx            # React 19 Entrypoint
+│   ├── package.json            # Client dependencies & scripts
+│   ├── tsconfig.json           # Client TypeScript configuration
+│   └── vite.config.ts          # Vite bundler configuration
+│
+├── server/                     # 🖥️ BACKEND (Node.js + Express + TypeScript)
+│   ├── config/                 # Environment, JWT, College Coordinates & Email Config
+│   │   └── index.ts
+│   ├── controllers/            # Controller Business Logic Layer
+│   │   └── index.ts            # Auth, Attendance, Faculty, Admin Controllers
+│   ├── middleware/             # Middleware Layer
+│   │   └── auth.ts             # JWT token authorization & RBAC guard
+│   ├── models/                 # Data Models & Schemas
+│   │   └── index.ts            # User, Student, Faculty, Session, Attendance interfaces
+│   ├── routes/                 # REST API Express Routes
+│   │   ├── admin.ts            # Admin API endpoints
+│   │   ├── auth.ts             # Authentication, Register, OTP dispatch
+│   │   ├── faculty.ts          # Lecture sessions, attendance logs
+│   │   └── student.ts          # QR submission, geolocation validation
+│   ├── utils/                  # Backend Utilities & Helpers
+│   │   ├── email.ts            # Resend API & Gmail SMTP OTP mailer
+│   │   ├── geo.ts              # Geodesic Haversine distance calculator
+│   │   ├── excel.ts            # Excel report generation
+│   │   └── pdf.ts              # Attendance PDF exporter
+│   ├── createAdmin.ts          # CLI script to bootstrap/reset Super Admin
+│   ├── createAdmin.js          # Executable runner for createAdmin
+│   ├── db.ts                   # Relational JSON/SQLite Database Manager
+│   ├── types.ts                # Backend types & database schemas
+│   └── package.json            # Server dependencies & scripts
+│
+├── .env                        # Environment Secrets & API Keys
+├── .env.example                # Example Environment Template
+├── server.ts                   # Integrated Full-Stack Runner (Dev & Prod)
+├── package.json                # Root monorepo configuration
+└── README.md                   # Project Documentation & Viva Guide
+```
 
 ---
+
+## 🛠 Tech Stack
+
+- **Frontend Framework:** React 19 (Hooks, Context API, Modular Components)
+- **Frontend Tooling:** Vite 8, TypeScript, Tailwind CSS 4
+- **Maps & Location:** Leaflet.js, OpenStreetMap, Google Maps API
+- **QR & Camera:** `getUserMedia` Camera API, HTML5 Canvas QR Scanner & Renderer
+- **Backend Framework:** Node.js, Express.js (REST API Architecture)
+- **Authentication:** JWT (JSON Web Tokens) with Role-Based Access Control (RBAC)
+- **Security:** bcryptjs password hashing, server-side Haversine geodesic validation
+- **Email Service:** Resend API & Nodemailer Gmail SMTP fallback
+
+---
+
+## 🚀 Running the Project
+
+### Unified Runner (Recommended):
+```bash
+# Install dependencies
+npm install
+
+# Start both Client & Server on Port 3000
+npm run dev
+
+# Or build for production
+npm run build
+npm run start
+```
+
+### CLI Admin Creator:
+```bash
+# Create or verify the Super Admin account
+node --import tsx server/createAdmin.ts
+```
 
 ## ⚙️ Installation & Local Setup in VS Code
 

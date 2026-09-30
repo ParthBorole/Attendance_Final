@@ -773,19 +773,28 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
     }
 
     // Security Check: Timestamp Freshness (prevent stale/replayed GPS)
-    if (locationTimestamp && Date.now() - Number(locationTimestamp) > 120000) {
+    if (locationTimestamp && Math.abs(Date.now() - Number(locationTimestamp)) > 60000) {
       res.status(400).json({
         success: false,
-        message: 'GPS reading is stale (older than 2 minutes). Please refresh and acquire a live reading.',
+        message: 'GPS reading is stale (older than 60 seconds). Please refresh and acquire a live sensor reading.',
       });
       return;
     }
 
-    // Security Check: Excessive GPS Uncertainty
-    if (Number(accuracy) > 150) {
+    // Security Check: Zero-Entropy / Fake GPS Check
+    if (Number(accuracy) <= 0 || isNaN(Number(latitude)) || isNaN(Number(longitude))) {
       res.status(400).json({
         success: false,
-        message: `GPS accuracy (±${Math.round(Number(accuracy))}m) is too uncertain for reliable attendance. Please move to a clear area with better reception and retry.`,
+        message: 'Invalid GPS hardware reading detected. Virtual/Mock GPS coordinates are blocked.',
+      });
+      return;
+    }
+
+    // Security Check: Strict GPS Precision (Must be high-accuracy near teacher's mobile)
+    if (Number(accuracy) > 35) {
+      res.status(400).json({
+        success: false,
+        message: `GPS uncertainty (±${Math.round(Number(accuracy))}m) is too wide. Please move closer to the Teacher's device and ensure your device GPS is in High-Accuracy mode.`,
       });
       return;
     }
@@ -802,11 +811,15 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
       return;
     }
 
+    const faculty = db.getFacultyById(session.faculty_id);
+    const facultyUser = faculty ? db.getUserById(faculty.user_id) : null;
+    const teacherName = facultyUser ? facultyUser.name : 'Teacher';
+
     // Security Check 1: Session must be active
     if (session.status !== 'ACTIVE') {
       res.status(400).json({
         success: false,
-        message: 'This attendance session has been stopped or expired. Submissions are closed.',
+        message: 'This attendance session has been closed or stopped by the teacher. Submissions are locked.',
       });
       return;
     }
@@ -821,7 +834,7 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
       });
       res.status(403).json({
         success: false,
-        message: 'Access Denied: You are not authorized to submit attendance for this class.',
+        message: 'Access Denied: You are not enrolled in the class for this lecture.',
       });
       return;
     }
@@ -879,13 +892,13 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
 
         res.status(403).json({
           success: false,
-          message: `🚫 Proxy Attempt Detected: This device has already been used to mark attendance for Roll No. ${otherStudent?.roll_number || 'another student'} in this lecture session. Multiple students cannot mark attendance using the same device!`,
+          message: `🚫 Proxy Attempt Blocked: This phone/device was already used to mark attendance for Roll No. ${otherStudent?.roll_number || 'another student'} in this lecture session. Each student must use their own device!`,
         });
         return;
       }
     }
 
-    // Security Check 5: Server-side distance calculation (Haversine)
+    // Security Check 5: Server-side distance calculation (Haversine against Teacher's live coordinates)
     const distanceMeters = calculateDistance(
       latitude,
       longitude,
@@ -903,18 +916,22 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
       });
       res.status(400).json({
         success: false,
-        message: `Location Verification Failed: You are ${distanceMeters}m away from the authorized classroom center, which exceeds the allowed ${session.radius_meters}m radius.`,
+        message: `Outside allowed proximity boundary (${session.radius_meters}m radius required).`,
         distanceMeters,
         allowedRadius: session.radius_meters,
       });
       return;
     }
 
-    // Security Check 6: Live camera verification check
-    if (typeof cameraImageBase64 !== 'string' || !cameraImageBase64.startsWith('data:image/')) {
+    // Security Check 6: Live Camera Selfie Verification & Anti-Spoofing
+    if (
+      typeof cameraImageBase64 !== 'string' ||
+      !cameraImageBase64.startsWith('data:image/') ||
+      cameraImageBase64.length < 8000
+    ) {
       res.status(400).json({
         success: false,
-        message: 'Camera Verification Failed: A valid live camera capture is required.',
+        message: 'Live Camera Verification Failed: A valid live front-camera selfie capture is required (minimum resolution required).',
       });
       return;
     }

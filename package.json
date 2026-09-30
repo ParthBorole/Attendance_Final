@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build client",
     "start": "tsx server.ts",
-    "preview": "vite preview",
+    "preview": "vite preview client",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
@@ -32,6 +32,7 @@
     "nodemailer": "^10.0.12",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "resend": "^6.31.0",
     "sql.js": "^1.14.2",
     "vite": "^8.3.0"
   },

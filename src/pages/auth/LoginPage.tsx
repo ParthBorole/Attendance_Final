@@ -107,6 +107,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
     const res = await ApiService.resendOtp({ email: otpEmail, purpose: 'login' });
     setIsLoading(false);
     if (res.success) {
+      if (res.otp) {
+        setReceivedOtp(res.otp);
+        setOtpInput(res.otp);
+      }
       setSuccessNotice(`Fresh OTP sent to ${otpEmail}. Please check your Gmail Inbox.`);
     } else {
       setError(res.message || 'Failed to resend OTP. Please try again.');

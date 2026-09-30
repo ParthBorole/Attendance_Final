@@ -463,20 +463,25 @@ router.get('/timetable', (req: AuthenticatedRequest, res: Response) => {
     const isFaculty = req.user!.role === 'faculty';
     const faculty = isFaculty ? db.getFacultyByUserId(req.user!.id) : null;
 
-    const timetable = faculty
+    const myTimetable = faculty
       ? db.getTimetable({ facultyId: faculty.id })
       : db.getTimetable();
+
+    const allTimetable = db.getTimetable({ classId: 'cls_tycs_a' });
 
     const subjects = db.getSubjects();
     const classes = db.getClasses();
     const classrooms = db.getClassrooms();
+    const faculties = db.getFaculty();
+    const users = db.getUsers();
     const activeSessions = db.getAttendanceSessions({ status: 'ACTIVE' });
     const currentDay = getCurrentDayOfWeek();
 
     const days: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    const formatted = days.map((day) => {
-      const slots = timetable
+    // 1. My subject slots
+    const formattedMyTimetable = days.map((day) => {
+      const slots = myTimetable
         .filter((t) => t.day_of_week === day)
         .sort((a, b) => parseTimeMinutes(a.start_time) - parseTimeMinutes(b.start_time))
         .map((entry) => {
@@ -500,6 +505,7 @@ router.get('/timetable', (req: AuthenticatedRequest, res: Response) => {
             joinCode: cr?.join_code || '',
             isActiveNow: day === currentDay && !!activeSess,
             activeSessionId: activeSess?.id || null,
+            isMySubject: true,
           };
         });
 
@@ -510,13 +516,69 @@ router.get('/timetable', (req: AuthenticatedRequest, res: Response) => {
       };
     });
 
+    // 2. Full class timetable (matching Student Dashboard)
+    const formattedFullTimetable = days.map((day) => {
+      const slots = allTimetable
+        .filter((t) => t.day_of_week === day)
+        .sort((a, b) => parseTimeMinutes(a.start_time) - parseTimeMinutes(b.start_time))
+        .map((entry) => {
+          const sub = subjects.find((s) => s.id === entry.subject_id);
+          const cls = classes.find((c) => c.id === entry.class_id);
+          const fac = faculties.find((f) => f.id === entry.faculty_id);
+          const facUser = fac ? users.find((u) => u.id === fac.user_id) : null;
+          const cr = classrooms.find((c) => c.subject_id === entry.subject_id && c.class_id === entry.class_id);
+          const activeSess = activeSessions.find((s) => s.subject_id === entry.subject_id && s.class_id === entry.class_id);
+          const isMySubject = faculty ? entry.faculty_id === faculty.id : true;
+
+          return {
+            id: entry.id,
+            subjectId: entry.subject_id,
+            subjectName: sub?.subject_name || 'Subject',
+            subjectCode: sub?.subject_code || '',
+            facultyName: facUser ? facUser.name : 'Faculty',
+            facultyShortCode: fac?.short_code || '',
+            classId: entry.class_id,
+            className: cls ? `${cls.class_name}.${cls.division}` : 'TYCS.A',
+            room: entry.room || 'Classroom',
+            isLab: entry.is_lab,
+            batch: entry.batch,
+            startTime: entry.start_time,
+            endTime: entry.end_time,
+            joinCode: cr?.join_code || '',
+            isActiveNow: day === currentDay && !!activeSess,
+            activeSessionId: activeSess?.id || null,
+            isMySubject,
+          };
+        });
+
+      return {
+        day,
+        isToday: day === currentDay,
+        slots,
+      };
+    });
+
+    // Weekly schedule keyed by day
+    const weeklySchedule: Record<string, any[]> = {};
+    formattedMyTimetable.forEach((d) => {
+      weeklySchedule[d.day] = d.slots;
+    });
+
+    const fullWeeklySchedule: Record<string, any[]> = {};
+    formattedFullTimetable.forEach((d) => {
+      fullWeeklySchedule[d.day] = d.slots;
+    });
+
     res.json({
       success: true,
       data: {
         facultyName: req.user!.name,
         shortCode: faculty?.short_code || 'ADM',
         currentDay,
-        timetable: formatted,
+        timetable: formattedMyTimetable,
+        weeklySchedule,
+        fullClassTimetable: formattedFullTimetable,
+        fullWeeklySchedule,
       },
     });
   } catch (error) {
@@ -802,6 +864,35 @@ router.get('/sessions/:id/live', (req: AuthenticatedRequest, res: Response) => {
   } catch (error) {
     console.error('Live session monitoring error:', error);
     res.status(500).json({ success: false, message: 'Could not fetch live session data.' });
+  }
+});
+
+// POST /api/faculty/sessions/:sessionId/override - Manual faculty attendance override
+router.post('/sessions/:sessionId/override', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const { studentId, status, reason } = req.body;
+
+    if (!studentId || !status) {
+      res.status(400).json({ success: false, message: 'Student ID and status (PRESENT/ABSENT) are required.' });
+      return;
+    }
+
+    const faculty = db.getFacultyByUserId(req.user!.id);
+    if (!faculty) {
+      res.status(403).json({ success: false, message: 'Only faculty can override attendance.' });
+      return;
+    }
+
+    db.overrideAttendance(sessionId, studentId, status === 'PRESENT' ? 'PRESENT' : 'ABSENT', faculty.id, reason);
+
+    res.json({
+      success: true,
+      message: `Student status successfully updated to ${status}.`,
+    });
+  } catch (error) {
+    console.error('Attendance override error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update student attendance status.' });
   }
 });
 

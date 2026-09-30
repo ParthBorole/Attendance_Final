@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config({ override: true, quiet: true });
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 
 export interface SentEmailLog {
@@ -18,7 +21,7 @@ export interface EmailSendResult {
   error?: string;
 }
 
-// In-memory / log store for sent emails
+// In-memory log store for sent emails
 const sentEmailsLog: SentEmailLog[] = [];
 
 export function generateOTP(): string {
@@ -166,31 +169,16 @@ export function generateOtpEmailHtml(otp: string, recipientName: string = 'Stude
 }
 
 function getEmailTransporter(): any {
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || '465', 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = (process.env.SMTP_USER || process.env.GMAIL_USER || '').trim();
+  const passRaw = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || '';
+  const pass = passRaw.replace(/\s+/g, '').trim();
 
-  if (host && user && pass) {
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: {
-        user,
-        pass,
-      },
-    });
-  }
-
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailPass = process.env.GMAIL_APP_PASSWORD;
-  if (gmailUser && gmailPass) {
+  if (user && pass) {
     return nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: gmailUser,
-        pass: gmailPass,
+        user,
+        pass,
       },
     });
   }
@@ -206,27 +194,88 @@ export async function sendOtpEmail(to: string, otp: string, recipientName: strin
   let statusMessage = 'OTP generated and saved for verification.';
   let errorMessage: string | undefined;
 
-  const transporter = getEmailTransporter();
-  if (transporter) {
+  // 1. PRIMARY PREFERENCE: RESEND API (https://resend.com)
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey && resendApiKey.trim().length > 0) {
+    const resendOwnerEmail = (process.env.RESEND_OWNER_EMAIL || 'smartattendance13@gmail.com').trim();
     try {
-      const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || '"AttendSecure TSDC" <noreply@tsdc.edu.in>';
-      await transporter.sendMail({
+      const resend = new Resend(resendApiKey.trim());
+      let fromAddress = (process.env.RESEND_FROM || 'AttendSecure <onboarding@resend.dev>').trim();
+      if (fromAddress.toLowerCase().includes('@gmail.com')) {
+        fromAddress = 'AttendSecure <onboarding@resend.dev>';
+      }
+      
+      const isOwner = to.toLowerCase() === resendOwnerEmail.toLowerCase();
+      const targetRecipient = isOwner ? to : resendOwnerEmail;
+      const finalSubject = isOwner ? subject : `[OTP for ${to}] ${subject}`;
+      const finalHtml = isOwner
+        ? html
+        : `<div style="background:#fef3c7;border:1px solid #f59e0b;padding:12px;margin-bottom:15px;border-radius:6px;font-family:sans-serif;color:#92400e;font-size:14px;"><strong>AttendSecure OTP Notice:</strong> Verification OTP requested for <strong>${to}</strong> is forwarded below to verified institutional inbox (<code>${resendOwnerEmail}</code>).</div>` + html;
+
+      let actualDeliveredTo = targetRecipient;
+
+      let sendRes = await resend.emails.send({
         from: fromAddress,
-        to,
-        subject,
-        html,
+        to: [targetRecipient],
+        subject: finalSubject,
+        html: finalHtml,
       });
+
+      if (sendRes.error && sendRes.error.message.includes('only send testing emails')) {
+        const match = sendRes.error.message.match(/\(([^)]+)\)/);
+        const allowedEmail = match ? match[1] : resendOwnerEmail;
+        actualDeliveredTo = allowedEmail;
+        
+        sendRes = await resend.emails.send({
+          from: fromAddress,
+          to: [allowedEmail],
+          subject: `[OTP for ${to}] ${subject}`,
+          html: `<div style="background:#fef3c7;border:1px solid #f59e0b;padding:12px;margin-bottom:15px;border-radius:6px;font-family:sans-serif;color:#92400e;font-size:14px;"><strong>AttendSecure OTP Notice:</strong> Verification OTP requested for <strong>${to}</strong> is delivered to developer inbox (${allowedEmail}).</div>` + html,
+        });
+      }
+
+      if (sendRes.error) {
+        throw new Error(sendRes.error.message);
+      }
+
       deliveredRealEmail = true;
-      statusMessage = `Email successfully dispatched to ${to} via SMTP.`;
-      console.log(`[EMAIL DISPATCH] Real email sent to ${to}: OTP is ${otp}`);
-    } catch (err: any) {
-      errorMessage = err?.message || 'SMTP delivery failed';
-      statusMessage = `SMTP delivery error: ${errorMessage}`;
-      console.warn(`[EMAIL DISPATCH WARNING] Could not deliver email to ${to}:`, errorMessage);
+      statusMessage = `Email successfully delivered to ${actualDeliveredTo} via Resend.com (ID: ${sendRes.data?.id})`;
+      console.log(`[RESEND EMAIL SUCCESS] Real email delivered to ${actualDeliveredTo}: OTP is ${otp}`);
+    } catch (resendErr: any) {
+      const resMsg = resendErr?.message || 'Resend delivery failed';
+      if (!errorMessage) errorMessage = resMsg;
+      console.warn(`[RESEND API NOTICE] ${resMsg}`);
     }
-  } else {
-    statusMessage = 'No SMTP credentials configured. OTP provided directly on screen.';
-    console.log(`[EMAIL DISPATCH] SMTP not configured. OTP generated for ${to}: ${otp}`);
+  }
+
+  // 2. SECONDARY FALLBACK: DIRECT GMAIL SERVICE (NODEMAILER)
+  if (!deliveredRealEmail) {
+    const transporter = getEmailTransporter();
+    if (transporter) {
+      try {
+        const smtpUser = (process.env.SMTP_USER || process.env.GMAIL_USER || '').trim();
+        const fromAddress = process.env.SMTP_FROM || (smtpUser ? `AttendSecure TSDC <${smtpUser}>` : '"AttendSecure TSDC" <noreply@tsdc.edu.in>');
+        
+        await transporter.sendMail({
+          from: fromAddress,
+          to,
+          subject,
+          html,
+        });
+
+        deliveredRealEmail = true;
+        statusMessage = `Email successfully dispatched to ${to} via Gmail SMTP.`;
+        console.log(`[GMAIL SMTP SUCCESS] Real email sent to ${to}: OTP is ${otp}`);
+      } catch (err: any) {
+        errorMessage = err?.message || 'Gmail delivery failed';
+        console.warn(`[GMAIL SMTP FAILED] Could not deliver email to ${to}: ${errorMessage}`);
+      }
+    }
+  }
+
+  if (!deliveredRealEmail && !resendApiKey && !getEmailTransporter()) {
+    statusMessage = 'No Resend or Gmail SMTP API credentials set in .env. OTP provided for easy verification.';
+    console.log(`[EMAIL DISPATCH] No Resend/SMTP key. OTP generated for ${to}: ${otp}`);
   }
 
   const logEntry: SentEmailLog = {

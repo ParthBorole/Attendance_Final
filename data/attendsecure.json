@@ -4,261 +4,141 @@
       "id": "usr_admin",
       "name": "Admin",
       "email": "admin@tsdc.edu.in",
-      "password_hash": "$2b$10$dqdonJSRtXp8029DJVlqbO1O4lvYnhuC2bNwlSin5Ff8Bg1ko6Cyq",
+      "password_hash": "$2b$10$VDKC8DvvHfLawRBi8qA5rumIdkThCZmiRjwbXL0ep8SOA6qRIbSn2",
       "role": "admin",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T18:21:37.975Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_tuba",
       "name": "Tuba Ma'am",
       "email": "tuba@tsdc.edu.in",
-      "password_hash": "$2b$10$hTYCI9elRhNIdAgQ//GigeY.v2x1xY6e0j9du.iHfmCELrF6JVmS.",
+      "password_hash": "$2b$10$AJN/zjrRTuEIKREqwOWmjOLJrPAY/v7sTUiAHUdyA3ZwZW2M513aG",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_ajit",
       "name": "Ajit Sir",
       "email": "ajit@tsdc.edu.in",
-      "password_hash": "$2b$10$OrB6py.eb0ua5J4LgCdOI.P8CL19eQ40bSEgJDnAi22lN5YhrH4P2",
+      "password_hash": "$2b$10$WdCHgC0wqqw.vgUtckdW/.NJhcQTLs4tkJq1N9fJf7dtStdVtJHli",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_vijay",
       "name": "Vijay Sir",
       "email": "vijay@tsdc.edu.in",
-      "password_hash": "$2b$10$e5tBB4jgskyCDo.Np6Jk..dyvZdljDE07cHJYz3ZVVcHrxIPp3P.G",
+      "password_hash": "$2b$10$44a8DRR.iuqqTry2KiRHVuokSL9uh1ozBo5Qm1EtwmcVC3v6Lnb.G",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_dsouza",
       "name": "Dsouza Ma'am",
       "email": "dsouza@tsdc.edu.in",
-      "password_hash": "$2b$10$5C2/LDKRzmnHRw97WY5RqurB/Ffu6jAhuQXjDnqz/8QzjJjeqr7Nm",
+      "password_hash": "$2b$10$xKnnpyqD/YY8KLtaUg8JsuWNqdwEPYG8YW3ZKrn5Wlv.xe1xh7H3W",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:41:15.353Z"
     },
     {
       "id": "usr_fac_aparna",
       "name": "Aparna Ma'am",
       "email": "aparna@tsdc.edu.in",
-      "password_hash": "$2b$10$s2T9a6N7VvVi/ymBYx6E4OfJFyDF5AMq.UaVJUHIw/1n7dwmeStZe",
+      "password_hash": "$2b$10$w1gSxXRrfwJ8dUVOfw4izO3owFqNiJb95wMWovQzHvp1JQcweSDTe",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_rajesh",
       "name": "Rajesh Sir",
       "email": "rajesh@tsdc.edu.in",
-      "password_hash": "$2b$10$J1X/Wji0sggiKFY3TP55rOqHW2un2rIG0o7h3laCh30KnThBxiTPu",
+      "password_hash": "$2b$10$h68ElWxcDO3D47sBkTPHLugo3L7VRw54PV6p6QQgifB4oHERZHsOS",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:50:42.493Z"
     },
     {
       "id": "usr_fac_abha",
       "name": "Abha Ma'am",
       "email": "abha@tsdc.edu.in",
-      "password_hash": "$2b$10$HKbkus8Toq78PYIggPHB9e1o8jz4gK1I/1QuwWDoeHTipEr0fBNTS",
+      "password_hash": "$2b$10$fGulSYSjcb4VZ5QsXbhrHeCgs4QX6u9wyqeTkqdGTGJC7WjgjDn0e",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_fac_kajal",
       "name": "Kajal Ma'am",
       "email": "kajal@tsdc.edu.in",
-      "password_hash": "$2b$10$qZZWu6dlyUbzHNaeYrZNWOLKD9Yro7OzRfyFqZO4wRmIyE0KYJbkC",
+      "password_hash": "$2b$10$bnDgcwiFVeTvoPcCI7D.teJ0ExsSmaCjeOt7Lup/nKEhXkd1keynq",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_std_01",
       "name": "Aarav Sharma",
       "email": "student@tsdc.edu.in",
-      "password_hash": "$2b$10$BP.g9fiHkGHudGTvMkbDRu.Bc8KVcDbf0SP70JxP5LrLXIroyH.Ji",
+      "password_hash": "$2b$10$P7wHqeZ3y4PpiVFS26VuXucNwjEmUHzBdKKZ0IQ7uECns.N7ZGFAm",
       "role": "student",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T17:43:53.709Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_std_02",
       "name": "Rohan Mehta",
       "email": "rohan.mehta@tsdc.edu.in",
-      "password_hash": "$2b$10$r/QHJ8aHIXDLB2zTK28qxeXfTkosqPaN9YOiB2Wz/BaQnTM/hPjMG",
+      "password_hash": "$2b$10$P7wHqeZ3y4PpiVFS26VuXucNwjEmUHzBdKKZ0IQ7uECns.N7ZGFAm",
       "role": "student",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T18:14:44.659Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_std_03",
       "name": "Priya Patel",
       "email": "priya.patel@tsdc.edu.in",
-      "password_hash": "$2b$10$r/QHJ8aHIXDLB2zTK28qxeXfTkosqPaN9YOiB2Wz/BaQnTM/hPjMG",
+      "password_hash": "$2b$10$P7wHqeZ3y4PpiVFS26VuXucNwjEmUHzBdKKZ0IQ7uECns.N7ZGFAm",
       "role": "student",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "usr_std_04",
       "name": "Sneha Verma",
       "email": "sneha.verma@tsdc.edu.in",
-      "password_hash": "$2b$10$r/QHJ8aHIXDLB2zTK28qxeXfTkosqPaN9YOiB2Wz/BaQnTM/hPjMG",
+      "password_hash": "$2b$10$P7wHqeZ3y4PpiVFS26VuXucNwjEmUHzBdKKZ0IQ7uECns.N7ZGFAm",
       "role": "student",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "updated_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z",
+      "updated_at": "2026-09-30T17:40:23.567Z"
     },
     {
-      "id": "usr_1790700690580_7v16",
-      "name": "Parth Borole",
-      "email": "boroleparth10@gmail.com",
-      "password_hash": "$2b$10$kFtCPsc5thIz7TSSVbA./.ba10TWZtY3OA3B4Z.1B9I3PlSfbY3nW",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T16:51:30.580Z",
-      "updated_at": "2026-09-29T18:26:54.164Z"
-    },
-    {
-      "id": "usr_1790701208170_37vy",
-      "name": "Parth Borole",
-      "email": "test_parth@tsdc.edu.in",
-      "password_hash": "$2b$10$eNTvOY9ebXwuRKeXiAXFR.skUBaB8wLknplUj/WE7kyNWCJ37b/C.",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:00:08.170Z",
-      "updated_at": "2026-09-29T17:00:08.170Z"
-    },
-    {
-      "id": "usr_1790701488260_6uwk",
-      "name": "Parth Borole",
-      "email": "parthborole2006@gmail.com",
-      "password_hash": "$2b$10$gyzbOrJWTcdWOkCVwXquAej9DxYCBJuJfd4Nh8ZcKJIgxDVVPL1da",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:04:48.260Z",
-      "updated_at": "2026-09-29T17:04:48.260Z"
-    },
-    {
-      "id": "usr_1790701649345_d6e6",
-      "name": "Rohan Verma",
-      "email": "rohan.student@tsdc.edu.in",
-      "password_hash": "$2b$10$thE8Y5WMO9tf9An3PkHlMu/d3wSme0e/J.MNBH/o7iFygJtDPjuJG",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:07:29.345Z",
-      "updated_at": "2026-09-29T17:07:29.345Z"
-    },
-    {
-      "id": "usr_1790701891975_tqdt",
-      "name": "Aarav Sharma",
-      "email": "aarav.sharma@tsdc.edu.in",
-      "password_hash": "$2b$10$CBrwSA1UCSuKV./6IJLEc.5UBhM42hsemqIL5bSH1hNutLopGS3yq",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:11:31.975Z",
-      "updated_at": "2026-09-29T17:11:31.975Z"
-    },
-    {
-      "id": "usr_1790702594672_pdsf",
-      "name": "Sachin",
-      "email": "srksachin2005@gmail.com",
-      "password_hash": "$2b$10$VxnhcjBVcJdOortsup0E8.Ze3saGihvU00nxOkPRE.bEdcOrpDGxG",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:23:14.672Z",
-      "updated_at": "2026-09-29T17:23:14.672Z"
-    },
-    {
-      "id": "usr_1790703010685_ns29",
-      "name": "Rajesh Sir",
-      "email": "rajesh.sharma@tsdc.edu.in",
-      "password_hash": "$2b$10$/.eC6a6m.NjD3Lv/szAR5eO1bF9JUHAyCzelsH2fgvNRWCcTF1QuO",
-      "role": "faculty",
-      "status": "active",
-      "created_at": "2026-09-29T17:30:10.685Z",
-      "updated_at": "2026-09-29T17:30:10.685Z"
-    },
-    {
-      "id": "usr_1790703023015_tgaa",
-      "name": "Neha Verma",
-      "email": "neha.verma@tsdc.edu.in",
-      "password_hash": "$2b$10$qa34T4j0Mp7JHNrS0uvrd.pA7zozgV/4sd.pWvahjSsc5LCKX/7.u",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T17:30:23.015Z",
-      "updated_at": "2026-09-29T17:30:23.015Z"
-    },
-    {
-      "id": "usr_1790703510222_n6sa",
+      "id": "usr_1790790503844_ro13",
       "name": "SmartAttendanceSystem",
-      "email": "vaishnaviborole2005@gmail.com",
-      "password_hash": "$2b$10$R9mQw.tIZp0SrWfkgw7vouc/ptKens9DnnLEVBNFnfUvVaHmnNU..",
+      "email": "boroleparth10@gmail.com",
+      "password_hash": "$2b$10$8VTf8jQVyJt6v6mF3sh3MuDdd1LJy28pezMXEcTMQ4Vt0bBoP4fDi",
       "role": "faculty",
       "status": "active",
-      "created_at": "2026-09-29T17:38:30.222Z",
-      "updated_at": "2026-09-29T17:38:30.222Z"
-    },
-    {
-      "id": "usr_1790705932302_xcy4",
-      "name": "Principal Sir",
-      "email": "principal@tsdc.edu.in",
-      "password_hash": "$2b$10$xeG3iiT4CQDMg2OmbjcwtOuDwKg.z4V3bYCQuSXz4jf9RfE4bqbHe",
-      "role": "admin",
-      "status": "active",
-      "created_at": "2026-09-29T18:18:52.302Z",
-      "updated_at": "2026-09-29T18:18:52.302Z"
-    },
-    {
-      "id": "usr_1790706465741_s20d",
-      "name": "ATTENDANCE",
-      "email": "aarav.sharma@smartattendance.edu",
-      "password_hash": "$2b$10$JdpdY0ypG/Jxt.BL2fIgz.Kxj3jr1alXOG5L6n8u6vGl1Y4M77HRi",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T18:27:45.741Z",
-      "updated_at": "2026-09-29T18:27:45.741Z"
-    },
-    {
-      "id": "usr_1790706678664_metr",
-      "name": "abcd",
-      "email": "abcd@gmail.com",
-      "password_hash": "$2b$10$nNb3NdcZwbe5EKG48elzzevuN/2ZqMu3scCxQmr5sGB4ff4q8tGRC",
-      "role": "student",
-      "status": "active",
-      "created_at": "2026-09-29T18:31:18.664Z",
-      "updated_at": "2026-09-29T18:31:18.664Z"
-    },
-    {
-      "id": "usr_1790706774491_7tfs",
-      "name": "Prof Verma Sir",
-      "email": "verma@tsdc.edu.in",
-      "password_hash": "$2b$10$0b97mOYgzXZsygYFA1TWEuNWD8ddOhZMOp5Sjg2JhnSuJP0Y84jU.",
-      "role": "faculty",
-      "status": "active",
-      "created_at": "2026-09-29T18:32:54.491Z",
-      "updated_at": "2026-09-29T18:32:54.491Z"
+      "created_at": "2026-09-30T17:48:23.844Z",
+      "updated_at": "2026-09-30T17:48:26.975Z"
     }
   ],
   "students": [
@@ -294,87 +174,6 @@
       "user_id": "usr_std_04",
       "student_id": "TSDC-TYCS-104",
       "roll_number": "104",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790700690581_8v41",
-      "user_id": "usr_1790700690580_7v16",
-      "student_id": "202403010",
-      "roll_number": "202403010",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790701208177_31mw",
-      "user_id": "usr_1790701208170_37vy",
-      "student_id": "TSDC-TEST-001",
-      "roll_number": "99",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790701488260_n6wn",
-      "user_id": "usr_1790701488260_6uwk",
-      "student_id": "TSDC-202403010",
-      "roll_number": "10",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790701649345_lrik",
-      "user_id": "usr_1790701649345_d6e6",
-      "student_id": "TSDC-ROHAN-01",
-      "roll_number": "102",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790701891976_mlor",
-      "user_id": "usr_1790701891975_tqdt",
-      "student_id": "TSDC-AARAV-01",
-      "roll_number": "105",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790702594672_bfis",
-      "user_id": "usr_1790702594672_pdsf",
-      "student_id": "TSDC-202403071",
-      "roll_number": "71",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790703023015_7hf8",
-      "user_id": "usr_1790703023015_tgaa",
-      "student_id": "TSDC-NEHA-02",
-      "roll_number": "106",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790706465741_3yc1",
-      "user_id": "usr_1790706465741_s20d",
-      "student_id": "344",
-      "roll_number": "34",
-      "class_id": "cls_tycs_a",
-      "division": "A",
-      "academic_year": "2026-27"
-    },
-    {
-      "id": "std_1790706678665_tkpm",
-      "user_id": "usr_1790706678664_metr",
-      "student_id": "ABCD",
-      "roll_number": "1234",
       "class_id": "cls_tycs_a",
       "division": "A",
       "academic_year": "2026-27"
@@ -438,25 +237,11 @@
       "short_code": "KAJAL"
     },
     {
-      "id": "fac_1790703010685_wl8c",
-      "user_id": "usr_1790703010685_ns29",
+      "id": "fac_1790790503844_6q0b",
+      "user_id": "usr_1790790503844_ro13",
       "department": "Computer Science",
-      "employee_id": "EMP-CS-101",
-      "short_code": "RJS"
-    },
-    {
-      "id": "fac_1790703510223_7b1k",
-      "user_id": "usr_1790703510222_n6sa",
-      "department": "Computer Science",
-      "employee_id": "2312",
-      "short_code": "2312"
-    },
-    {
-      "id": "fac_1790706774492_9q9n",
-      "user_id": "usr_1790706774491_7tfs",
-      "department": "Computer Science",
-      "employee_id": "EMP-CS-99",
-      "short_code": "PVS"
+      "employee_id": "1234",
+      "short_code": "1234"
     }
   ],
   "classes": [
@@ -549,9 +334,9 @@
       "class_id": "cls_tycs_a"
     },
     {
-      "id": "sub_1790703510224_ib7w",
-      "subject_name": "CIS",
-      "subject_code": "2312-101",
+      "id": "sub_1790790503845_3cxl",
+      "subject_name": "DV",
+      "subject_code": "1234-101",
       "class_id": "cls_tycs_a"
     }
   ],
@@ -605,9 +390,9 @@
       "class_id": "cls_tycs_a"
     },
     {
-      "id": "fa_1790703510224",
-      "faculty_id": "fac_1790703510223_7b1k",
-      "subject_id": "sub_1790703510224_ib7w",
+      "id": "fa_1790790503845",
+      "faculty_id": "fac_1790790503844_6q0b",
+      "subject_id": "sub_1790790503845_3cxl",
       "class_id": "cls_tycs_a"
     }
   ],
@@ -939,7 +724,7 @@
       "join_code": "AI-7K4P",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_stqa_tycsa",
@@ -952,7 +737,7 @@
       "join_code": "ST-9M2X",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_eth_tycsa",
@@ -965,7 +750,7 @@
       "join_code": "EH-6Q1V",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_dv_tycsa",
@@ -978,7 +763,7 @@
       "join_code": "DV-3R8P",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_aba_tycsa",
@@ -991,7 +776,7 @@
       "join_code": "AB-8W2T",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_cis_tycsa",
@@ -1004,7 +789,7 @@
       "join_code": "CI-4L9R",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_mp_tycsa",
@@ -1017,7 +802,7 @@
       "join_code": "MP-2V5A",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cr_iks_tycsa",
@@ -1030,20 +815,20 @@
       "join_code": "IK-5L3N",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
-      "id": "cr_1790703510225_4law",
-      "classroom_name": "CIS — TYCS.A",
-      "name": "CIS — TYCS.A",
-      "join_code": "231-775T",
-      "subject_id": "sub_1790703510224_ib7w",
+      "id": "cr_1790790503846_tqkx",
+      "classroom_name": "DV — TYCS.A",
+      "name": "DV — TYCS.A",
+      "join_code": "123-RNZ7",
+      "subject_id": "sub_1790790503845_3cxl",
       "class_id": "cls_tycs_a",
       "division": "A",
-      "faculty_id": "fac_1790703510223_7b1k",
+      "faculty_id": "fac_1790790503844_6q0b",
       "academic_year": "2026-27",
       "status": "active",
-      "created_at": "2026-09-29T17:38:30.225Z"
+      "created_at": "2026-09-30T17:48:23.846Z"
     }
   ],
   "classroom_members": [
@@ -1051,89 +836,81 @@
       "id": "cm_01",
       "classroom_id": "cr_ai_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_02",
       "classroom_id": "cr_stqa_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_03",
       "classroom_id": "cr_eth_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_04",
       "classroom_id": "cr_dv_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_05",
       "classroom_id": "cr_aba_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_06",
       "classroom_id": "cr_iks_tycsa",
       "student_id": "std_01",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_07",
       "classroom_id": "cr_ai_tycsa",
       "student_id": "std_02",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_08",
       "classroom_id": "cr_stqa_tycsa",
       "student_id": "std_02",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_09",
       "classroom_id": "cr_ai_tycsa",
       "student_id": "std_03",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "cm_10",
       "classroom_id": "cr_eth_tycsa",
       "student_id": "std_03",
-      "joined_at": "2026-09-29T16:30:37.198Z",
+      "joined_at": "2026-09-30T17:40:23.567Z",
       "status": "active",
-      "created_at": "2026-09-29T16:30:37.198Z"
-    },
-    {
-      "id": "cm_1790703935722_dewo",
-      "classroom_id": "cr_1790703510225_4law",
-      "student_id": "std_1790700690581_8v41",
-      "joined_at": "2026-09-29T17:45:35.722Z",
-      "status": "active",
-      "created_at": "2026-09-29T17:45:35.722Z"
+      "created_at": "2026-09-30T17:40:23.567Z"
     }
   ],
   "attendance_sessions": [
@@ -1144,14 +921,13 @@
       "classroom_id": "cr_ai_tycsa",
       "faculty_id": "fac_vijay",
       "lecture_topic": "Heuristic Search & A* Algorithm Implementation",
-      "session_date": "2026-09-29",
+      "session_date": "2026-09-30",
       "start_time": "08:00 AM",
       "radius_meters": 10,
       "center_latitude": 19.213805,
       "center_longitude": 72.864869,
-      "status": "CLOSED",
-      "created_at": "2026-09-29T16:30:37.198Z",
-      "end_time": "04:36 PM"
+      "status": "ACTIVE",
+      "created_at": "2026-09-30T17:40:23.567Z"
     },
     {
       "id": "sess_past_01",
@@ -1222,163 +998,44 @@
   ],
   "otp_verifications": [
     {
-      "id": "otp_1790700872272",
-      "email": "student@tsdc.edu.in",
-      "otp_hash": "$2b$08$mVv6hWaTuznlPBenivBK8OoWvETYuBfJmAFe9WrRw9Wc895H5Bc3O",
-      "expires_at": 1790701472271,
+      "id": "otp_1790790062415_fq2e",
+      "email": "dsouza@tsdc.edu.in",
+      "otp_hash": "$2b$08$rGo.3eYce4LUHP2Th5onaunNdVjMMGYqQcYw22LsX6S62Es8LPDO6",
+      "expires_at": 1790790662415,
       "attempts": 0,
-      "verified": false,
-      "purpose": "registration",
-      "created_at": "2026-09-29T16:54:32.272Z"
+      "verified": true,
+      "purpose": "login",
+      "created_at": "2026-09-30T17:41:02.416Z"
     },
     {
-      "id": "otp_1790701208218",
-      "email": "test_parth@tsdc.edu.in",
-      "otp_hash": "$2b$08$KjFWQLLJ2f4U4RtM5fd60eq.nSQIqtWO/X04W964zNJ7bx05bNx5S",
-      "expires_at": 1790701808218,
-      "attempts": 0,
-      "verified": false,
-      "purpose": "registration",
-      "created_at": "2026-09-29T17:00:08.218Z"
-    },
-    {
-      "id": "otp_1790701215116",
+      "id": "otp_1790790503871_bpwg",
       "email": "boroleparth10@gmail.com",
-      "otp_hash": "$2b$08$feQBKKK3EMY4gOEbr9Fr1uJu1eyURo7934RJVO6StbGvp9Vz./Ac2",
-      "expires_at": 1790701815116,
+      "otp_hash": "$2b$08$gFg5gOY2o3dRT4ntbzshhOJ2.f9.X1fk4FIYWUVjWuMogyp0Mgml6",
+      "expires_at": 1790791103871,
       "attempts": 0,
       "verified": true,
       "purpose": "registration",
-      "created_at": "2026-09-29T17:00:15.116Z"
+      "created_at": "2026-09-30T17:48:23.871Z"
     },
     {
-      "id": "otp_1790701488286",
-      "email": "parthborole2006@gmail.com",
-      "otp_hash": "$2b$08$d0pJgFucAzyUd.WdAkUZiu486oIk8zL8XhnPWSrxXMOFfHapnjj86",
-      "expires_at": 1790702088286,
-      "attempts": 0,
-      "verified": false,
-      "purpose": "registration",
-      "created_at": "2026-09-29T17:04:48.286Z"
-    },
-    {
-      "id": "otp_1790701649370",
-      "email": "rohan.student@tsdc.edu.in",
-      "otp_hash": "$2b$08$ETm0Tgq87GdVEipVx3WDguxLko3oCdj20z73E2miG79Nj651Y/QN6",
-      "expires_at": 1790702249370,
-      "attempts": 0,
-      "verified": false,
-      "purpose": "registration",
-      "created_at": "2026-09-29T17:07:29.370Z"
-    },
-    {
-      "id": "otp_1790705675176_194d",
-      "email": "rohan.mehta@tsdc.edu.in",
-      "otp_hash": "$2b$08$PWI2S83de6XEmP0akJYkBOsdKxjB4cTo4dAh05s2Kki8U2rwm6PIy",
-      "expires_at": 1790706275176,
+      "id": "otp_1790790637546_exgh",
+      "email": "rajesh@tsdc.edu.in",
+      "otp_hash": "$2b$08$/HUd08wKBX2nl6xBE8NRm.H9i6gquj5vLRm/PLLD1wL9TSh47IEP.",
+      "expires_at": 1790791237546,
       "attempts": 0,
       "verified": true,
       "purpose": "login",
-      "created_at": "2026-09-29T18:14:35.176Z"
-    },
-    {
-      "id": "otp_1790706087780_bbzb",
-      "email": "admin@tsdc.edu.in",
-      "otp_hash": "$2b$08$HmcD2RWOoaiOBqHnpsoTQOu1GgHc341LQle77.smrvrJH7byGxw6.",
-      "expires_at": 1790706687780,
-      "attempts": 0,
-      "verified": true,
-      "purpose": "login",
-      "created_at": "2026-09-29T18:21:27.780Z"
-    },
-    {
-      "id": "otp_1790706407342_8k71",
-      "email": "boroleparth10@gmail.com",
-      "otp_hash": "$2b$08$Gy4A8FwdBbHukjeVNWq5n./eV.3s/jidSjnIzruJh.oP7ZIgo6GRC",
-      "expires_at": 1790707007342,
-      "attempts": 0,
-      "verified": true,
-      "purpose": "login",
-      "created_at": "2026-09-29T18:26:47.342Z"
+      "created_at": "2026-09-30T17:50:37.546Z"
     }
   ],
   "audit_logs": [
-    {
-      "id": "audit_1790706399535_5pl7",
-      "action": "USER_PASSWORD_RESET",
-      "actor_id": "usr_1790700690580_7v16",
-      "actor_role": "student",
-      "target_id": "usr_1790700690580_7v16",
-      "details": "{\"email\":\"boroleparth10@gmail.com\"}",
-      "timestamp": "2026-09-29T18:26:39.535Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790703935722_xof9",
-      "action": "CLASSROOM_JOINED",
-      "actor_id": "usr_1790700690580_7v16",
-      "actor_role": "student",
-      "target_id": "cr_1790703510225_4law",
-      "details": "{\"classroomName\":\"CIS — TYCS.A\",\"code\":\"231-775T\"}",
-      "timestamp": "2026-09-29T17:45:35.722Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790703921585_6rbm",
-      "action": "USER_PASSWORD_RESET",
-      "actor_id": "usr_1790700690580_7v16",
-      "actor_role": "student",
-      "target_id": "usr_1790700690580_7v16",
-      "details": "{\"email\":\"boroleparth10@gmail.com\"}",
-      "timestamp": "2026-09-29T17:45:21.585Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790703920436_gaf1",
-      "action": "USER_PASSWORD_RESET",
-      "actor_id": "usr_1790700690580_7v16",
-      "actor_role": "student",
-      "target_id": "usr_1790700690580_7v16",
-      "details": "{\"email\":\"boroleparth10@gmail.com\"}",
-      "timestamp": "2026-09-29T17:45:20.436Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790703833710_c3gf",
-      "action": "USER_PASSWORD_RESET",
-      "actor_id": "usr_std_01",
-      "actor_role": "student",
-      "target_id": "usr_std_01",
-      "details": "{\"email\":\"student@tsdc.edu.in\"}",
-      "timestamp": "2026-09-29T17:43:53.710Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790703829481_nqjd",
-      "action": "USER_PASSWORD_RESET",
-      "actor_id": "usr_std_01",
-      "actor_role": "student",
-      "target_id": "usr_std_01",
-      "details": "{\"email\":\"student@tsdc.edu.in\"}",
-      "timestamp": "2026-09-29T17:43:49.481Z",
-      "severity": "info"
-    },
-    {
-      "id": "audit_1790699772122_sw1y",
-      "action": "SESSION_STOPPED",
-      "actor_id": "usr_fac_vijay",
-      "actor_role": "faculty",
-      "target_id": "sess_live_01",
-      "timestamp": "2026-09-29T16:36:12.122Z",
-      "severity": "info"
-    },
     {
       "id": "log_01",
       "actor_id": "usr_admin",
       "actor_role": "admin",
       "action": "SYSTEM_INITIALIZED",
       "entity_type": "system",
-      "timestamp": "2026-09-29T16:30:37.198Z",
+      "timestamp": "2026-09-30T17:40:23.567Z",
       "details": "AttendSecure database initialized with exact faculty names and timetable",
       "severity": "info"
     }
@@ -1392,6 +1049,6 @@
     "min_radius": 1,
     "max_radius": 50,
     "low_attendance_threshold": 75,
-    "updated_at": "2026-09-29T16:30:36.087Z"
+    "updated_at": "2026-09-30T17:40:22.589Z"
   }
 }

@@ -89,11 +89,11 @@ class DatabaseManager {
         };
 
         const hasCleanName = this.db.users.some((u) => u.name === 'Tuba Ma\'am' || u.name === 'Vijay Sir');
-        if (!hasCleanName || this.db.timetables.length === 0 || this.db.classrooms.length === 0) {
+        const hasStudents = this.db.students && this.db.students.length > 0;
+        if (!hasCleanName || this.db.timetables.length === 0 || this.db.classrooms.length === 0 || !hasStudents) {
           this.seedDatabase();
         }
 
-        this.cleanDatabaseForProduction();
         this.isLoaded = true;
         return;
       } catch (err) {
@@ -102,7 +102,6 @@ class DatabaseManager {
     }
 
     this.seedDatabase();
-    this.cleanDatabaseForProduction();
     this.isLoaded = true;
   }
 
@@ -953,6 +952,41 @@ class DatabaseManager {
 
   public addAttendanceRecord(record: AttendanceRecord) {
     this.db.attendance_records.unshift(record);
+    this.save();
+  }
+
+  public overrideAttendance(
+    sessionId: string,
+    studentId: string,
+    status: 'PRESENT' | 'ABSENT',
+    facultyId: string,
+    reason?: string
+  ) {
+    const existingIdx = this.db.attendance_records.findIndex(
+      (r) => r.session_id === sessionId && r.student_id === studentId
+    );
+    const now = new Date().toISOString();
+    if (existingIdx !== -1) {
+      this.db.attendance_records[existingIdx].status = status;
+      this.db.attendance_records[existingIdx].marked_at = now;
+    } else {
+      this.db.attendance_records.unshift({
+        id: `att_rec_ov_${Date.now()}`,
+        session_id: sessionId,
+        student_id: studentId,
+        marked_at: now,
+        distance_from_center: 0,
+        latitude: 0,
+        longitude: 0,
+        accuracy: 0,
+        altitude: null,
+        camera_image_path: '',
+        camera_verification_status: 'VERIFIED',
+        device_id: 'faculty_manual_override',
+        status: status,
+        created_at: now,
+      });
+    }
     this.save();
   }
 
