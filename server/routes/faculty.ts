@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { db } from '../db.js';
 import { authenticate, requireRole, AuthenticatedRequest } from '../middleware/auth.js';
-import { AttendanceSession, ClassroomEntity, DayOfWeek } from '../types.js';
+import { AttendanceSession, ClassroomEntity, DayOfWeek, Student, User } from '../types.js';
 
 const router = Router();
 
@@ -595,10 +596,131 @@ router.get('/classes', (req: AuthenticatedRequest, res: Response) => {
     const assignments = db.getFacultyAssignments(faculty ? faculty.id : undefined);
     const assignedClassIds = Array.from(new Set(assignments.map((a) => a.class_id)));
 
-    const classes = db.getClasses().filter((c) => assignedClassIds.length === 0 || assignedClassIds.includes(c.id));
-    res.json({ success: true, data: classes });
+    // Return classes that the teacher is assigned to, or all classes if not restricted
+    const allClasses = db.getClasses();
+    const classes = isFaculty && assignedClassIds.length > 0 
+      ? allClasses.filter((c) => assignedClassIds.includes(c.id))
+      : allClasses;
+    res.json({ success: true, data: classes, allClasses });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Could not fetch classes.' });
+  }
+});
+
+// POST /api/faculty/classes - Create new class/division
+router.post('/classes', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { course_name, class_name, division, academic_year = '2026-27' } = req.body;
+    if (!class_name || !division) {
+      res.status(400).json({ success: false, message: 'Class name (e.g. TYCS) and division (e.g. A) are required.' });
+      return;
+    }
+
+    const cleanClass = class_name.trim().toUpperCase();
+    const cleanDiv = division.trim().toUpperCase();
+    const cleanCourse = course_name ? course_name.trim() : 'B.Sc. Computer Science';
+
+    const classId = `cls_${cleanClass.toLowerCase()}_${cleanDiv.toLowerCase()}_${Date.now().toString(36).substring(2, 6)}`;
+    const newClass = {
+      id: classId,
+      course_name: cleanCourse,
+      class_name: cleanClass,
+      division: cleanDiv,
+      academic_year,
+      is_active: true,
+    };
+
+    db.addClass(newClass);
+
+    // Auto assign to faculty if faculty role
+    const isFaculty = req.user!.role === 'faculty';
+    if (isFaculty) {
+      const faculty = db.getFacultyByUserId(req.user!.id);
+      if (faculty) {
+        // Also auto-assign so they can create sessions for it
+        db.addFacultyAssignment({
+          id: `fa_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          faculty_id: faculty.id,
+          class_id: classId,
+          subject_id: '',
+        });
+      }
+    }
+
+    db.addAuditLog({
+      action: 'CLASS_CREATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: classId,
+      details: { class_name: cleanClass, division: cleanDiv, course_name: cleanCourse },
+    });
+
+    res.json({ success: true, message: `Class ${cleanClass}-${cleanDiv} created successfully.`, data: newClass });
+  } catch (error) {
+    console.error('Create class error:', error);
+    res.status(500).json({ success: false, message: 'Could not create class.' });
+  }
+});
+
+// PUT /api/faculty/classes/:id - Update class/division
+router.put('/classes/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { course_name, class_name, division, academic_year, is_active } = req.body;
+    const existing = db.getClassById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Class not found.' });
+      return;
+    }
+
+    const updates: any = {};
+    if (course_name !== undefined) updates.course_name = course_name.trim();
+    if (class_name !== undefined) updates.class_name = class_name.trim().toUpperCase();
+    if (division !== undefined) updates.division = division.trim().toUpperCase();
+    if (academic_year !== undefined) updates.academic_year = academic_year.trim();
+    if (is_active !== undefined) updates.is_active = Boolean(is_active);
+
+    db.updateClass(id, updates);
+
+    db.addAuditLog({
+      action: 'CLASS_UPDATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: updates,
+    });
+
+    res.json({ success: true, message: 'Class updated successfully.', data: { ...existing, ...updates } });
+  } catch (error) {
+    console.error('Update class error:', error);
+    res.status(500).json({ success: false, message: 'Could not update class.' });
+  }
+});
+
+// DELETE /api/faculty/classes/:id - Delete class/division
+router.delete('/classes/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const existing = db.getClassById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Class not found.' });
+      return;
+    }
+
+    db.deleteClass(id);
+
+    db.addAuditLog({
+      action: 'CLASS_DELETED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { class_name: existing.class_name, division: existing.division },
+    });
+
+    res.json({ success: true, message: `Class ${existing.class_name}-${existing.division} deleted successfully.` });
+  } catch (error) {
+    console.error('Delete class error:', error);
+    res.status(500).json({ success: false, message: 'Could not delete class.' });
   }
 });
 
@@ -609,24 +731,151 @@ router.get('/subjects', (req: AuthenticatedRequest, res: Response) => {
     const isFaculty = req.user!.role === 'faculty';
     const faculty = isFaculty ? db.getFacultyByUserId(req.user!.id) : null;
     const assignments = db.getFacultyAssignments(faculty ? faculty.id : undefined);
-    const assignedSubjectIds = Array.from(new Set(assignments.map((a) => a.subject_id)));
+    const assignedSubjectIds = Array.from(new Set(assignments.map((a) => a.subject_id).filter(Boolean)));
 
-    let subjects = db.getSubjects().filter((s) => !isFaculty || assignedSubjectIds.includes(s.id));
+    let subjects = db.getSubjects();
+    if (isFaculty && assignedSubjectIds.length > 0) {
+      subjects = subjects.filter((s) => assignedSubjectIds.includes(s.id));
+    }
 
     if (classId) {
       subjects = subjects.filter((s) => s.class_id === classId);
     }
 
-    res.json({ success: true, data: subjects });
+    res.json({ success: true, data: subjects, allSubjects: db.getSubjects() });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Could not fetch subjects.' });
+  }
+});
+
+// POST /api/faculty/subjects - Create new subject
+router.post('/subjects', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { subject_name, subject_code, class_id } = req.body;
+    if (!subject_name || !subject_code || !class_id) {
+      res.status(400).json({ success: false, message: 'Subject name, subject code, and class ID are required.' });
+      return;
+    }
+
+    const cls = db.getClassById(class_id);
+    if (!cls) {
+      res.status(400).json({ success: false, message: 'Invalid class ID provided.' });
+      return;
+    }
+
+    const cleanName = subject_name.trim();
+    const cleanCode = subject_code.trim().toUpperCase();
+    const subjectId = `sub_${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now().toString(36).substring(2, 6)}`;
+
+    const newSubject = {
+      id: subjectId,
+      subject_name: cleanName,
+      subject_code: cleanCode,
+      class_id,
+    };
+
+    db.addSubject(newSubject);
+
+    // Auto assign to faculty if faculty role
+    const isFaculty = req.user!.role === 'faculty';
+    if (isFaculty) {
+      const faculty = db.getFacultyByUserId(req.user!.id);
+      if (faculty) {
+        db.addFacultyAssignment({
+          id: `fa_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          faculty_id: faculty.id,
+          class_id,
+          subject_id: subjectId,
+        });
+      }
+    }
+
+    db.addAuditLog({
+      action: 'SUBJECT_CREATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: subjectId,
+      details: { subject_name: cleanName, subject_code: cleanCode, class_id },
+    });
+
+    res.json({ success: true, message: `Subject ${cleanName} (${cleanCode}) created successfully.`, data: newSubject });
+  } catch (error) {
+    console.error('Create subject error:', error);
+    res.status(500).json({ success: false, message: 'Could not create subject.' });
+  }
+});
+
+// PUT /api/faculty/subjects/:id - Update subject
+router.put('/subjects/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { subject_name, subject_code, class_id } = req.body;
+    const existing = db.getSubjectById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Subject not found.' });
+      return;
+    }
+
+    const updates: any = {};
+    if (subject_name !== undefined) updates.subject_name = subject_name.trim();
+    if (subject_code !== undefined) updates.subject_code = subject_code.trim().toUpperCase();
+    if (class_id !== undefined) updates.class_id = class_id;
+
+    db.updateSubject(id, updates);
+
+    db.addAuditLog({
+      action: 'SUBJECT_UPDATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: updates,
+    });
+
+    res.json({ success: true, message: 'Subject updated successfully.', data: { ...existing, ...updates } });
+  } catch (error) {
+    console.error('Update subject error:', error);
+    res.status(500).json({ success: false, message: 'Could not update subject.' });
+  }
+});
+
+// DELETE /api/faculty/subjects/:id - Delete subject
+router.delete('/subjects/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const existing = db.getSubjectById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, message: 'Subject not found.' });
+      return;
+    }
+
+    db.deleteSubject(id);
+
+    db.addAuditLog({
+      action: 'SUBJECT_DELETED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { subject_name: existing.subject_name, subject_code: existing.subject_code },
+    });
+
+    res.json({ success: true, message: `Subject ${existing.subject_name} deleted successfully.` });
+  } catch (error) {
+    console.error('Delete subject error:', error);
+    res.status(500).json({ success: false, message: 'Could not delete subject.' });
   }
 });
 
 // POST /api/faculty/sessions - Create and start attendance session
 router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { classId, subjectId, lectureTopic, radiusMeters, sessionDate } = req.body;
+    const classId = req.body.classId || req.body.class_id;
+    const subjectId = req.body.subjectId || req.body.subject_id;
+    const lectureTopic = req.body.lectureTopic || req.body.lecture_topic;
+    const lectureNumber = req.body.lectureNumber || req.body.lecture_number;
+    const radiusMeters = req.body.radiusMeters || req.body.radius_meters;
+    const sessionDate = req.body.sessionDate || req.body.session_date;
+    const startTime = req.body.startTime || req.body.start_time;
+    const attendanceMode = req.body.attendanceMode || req.body.attendance_mode || 'SMART_GEOFENCE';
 
     if (!classId || !subjectId || !lectureTopic) {
       res.status(400).json({
@@ -648,7 +897,7 @@ router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
 
       // STRICT BACKEND SECURITY CHECK: Verify faculty is assigned to this class and subject
       const assignments = db.getFacultyAssignments(faculty.id);
-      const hasAssignment = assignments.some((a) => a.class_id === classId && a.subject_id === subjectId);
+      const hasAssignment = assignments.some((a) => a.class_id === classId && (!a.subject_id || a.subject_id === subjectId));
       if (!hasAssignment) {
         db.addAuditLog({
           action: 'SESSION_CREATE_UNAUTHORIZED',
@@ -676,10 +925,11 @@ router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
     }
 
     const now = new Date();
-    const startTimeFormatted = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const startTimeFormatted = startTime || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const facultyLat = req.body.latitude !== undefined ? Number(req.body.latitude) : settings.official_latitude;
-    const facultyLng = req.body.longitude !== undefined ? Number(req.body.longitude) : settings.official_longitude;
+    // Official fixed TSDC Kandivali Campus Geofence Anchor (Thakur Shyamnarayan Degree College)
+    const collegeLat = settings.official_latitude || 19.213805;
+    const collegeLng = settings.official_longitude || 72.864810;
 
     const newSession: AttendanceSession = {
       id: `sess_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -687,12 +937,15 @@ router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
       subject_id: subjectId,
       faculty_id: facultyId,
       lecture_topic: lectureTopic.trim(),
+      lecture_number: lectureNumber || undefined,
       session_date: sessionDate || now.toISOString().split('T')[0],
       start_time: startTimeFormatted,
       radius_meters: radius,
-      center_latitude: facultyLat,
-      center_longitude: facultyLng,
+      center_latitude: collegeLat,
+      center_longitude: collegeLng,
       status: 'ACTIVE',
+      is_locked: false,
+      attendance_mode: attendanceMode,
       created_at: now.toISOString(),
     };
 
@@ -703,7 +956,7 @@ router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
       actor_id: req.user!.id,
       actor_role: isFaculty ? 'faculty' : 'admin',
       target_id: newSession.id,
-      details: { topic: newSession.lecture_topic, radius },
+      details: { topic: newSession.lecture_topic, lectureNumber: newSession.lecture_number, radius, mode: attendanceMode },
     });
 
     const cls = db.getClassById(classId);
@@ -717,6 +970,260 @@ router.post('/sessions', (req: AuthenticatedRequest, res: Response) => {
   } catch (error) {
     console.error('Create session error:', error);
     res.status(500).json({ success: false, message: 'Failed to create attendance session.' });
+  }
+});
+
+// POST /api/faculty/sessions/manual-record - Record bulk manual attendance sheet
+router.post('/sessions/manual-record', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const existingSessionId = req.body.existingSessionId || req.body.sessionId || req.body.session_id;
+    const classId = req.body.classId || req.body.class_id;
+    const subjectId = req.body.subjectId || req.body.subject_id;
+    const lectureTopic = req.body.lectureTopic || req.body.lecture_topic;
+    const lectureNumber = req.body.lectureNumber || req.body.lecture_number;
+    const sessionDate = req.body.sessionDate || req.body.session_date;
+    const startTime = req.body.startTime || req.body.start_time;
+    const endTime = req.body.endTime || req.body.end_time;
+    const rawList = req.body.attendances || req.body.records || [];
+    const lockSession = req.body.lockSession !== undefined ? req.body.lockSession : req.body.lock_session;
+
+    if (!classId || !subjectId || !lectureTopic) {
+      res.status(400).json({ success: false, message: 'Class ID, Subject ID, and Lecture Topic are required.' });
+      return;
+    }
+
+    if (!Array.isArray(rawList)) {
+      res.status(400).json({ success: false, message: 'Attendances or records array is required.' });
+      return;
+    }
+
+    const attendances = rawList.map((item: any) => ({
+      studentId: item.studentId || item.student_id,
+      status: item.status === 'PRESENT' ? 'PRESENT' : 'ABSENT',
+      notes: item.notes || '',
+    }));
+
+    const isFaculty = req.user!.role === 'faculty';
+    let facultyId = 'fac_var';
+    if (isFaculty) {
+      const faculty = db.getFacultyByUserId(req.user!.id);
+      if (!faculty) {
+        res.status(403).json({ success: false, message: 'Faculty profile not found.' });
+        return;
+      }
+      facultyId = faculty.id;
+    }
+
+    const now = new Date();
+    let session = existingSessionId ? db.getSessionById(existingSessionId) : null;
+
+    if (session && session.is_locked) {
+      res.status(403).json({
+        success: false,
+        message: 'This attendance session is locked. Please unlock it before making changes.',
+      });
+      return;
+    }
+
+    const sessionId = session ? session.id : `sess_man_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    if (!session) {
+      session = {
+        id: sessionId,
+        class_id: classId,
+        subject_id: subjectId,
+        faculty_id: facultyId,
+        lecture_topic: lectureTopic.trim(),
+        lecture_number: lectureNumber || undefined,
+        session_date: sessionDate || now.toISOString().split('T')[0],
+        start_time: startTime || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        end_time: endTime || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        radius_meters: 50,
+        center_latitude: 19.213805,
+        center_longitude: 72.864810,
+        status: 'CLOSED',
+        is_locked: Boolean(lockSession),
+        locked_at: lockSession ? now.toISOString() : undefined,
+        locked_by: lockSession ? req.user!.name : undefined,
+        attendance_mode: 'MANUAL',
+        created_at: now.toISOString(),
+      };
+      db.createSession(session);
+    } else {
+      db.updateSession(session.id, {
+        lecture_topic: lectureTopic.trim(),
+        lecture_number: lectureNumber || session.lecture_number,
+        session_date: sessionDate || session.session_date,
+        start_time: startTime || session.start_time,
+        end_time: endTime || session.end_time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        is_locked: Boolean(lockSession),
+        locked_at: lockSession ? now.toISOString() : session.locked_at,
+        locked_by: lockSession ? req.user!.name : session.locked_by,
+      });
+    }
+
+    // Process attendance records
+    for (const item of attendances) {
+      if (item.studentId) {
+        db.overrideAttendance(
+          sessionId,
+          item.studentId,
+          item.status as any,
+          facultyId,
+          item.notes || 'Manual Attendance by Teacher'
+        );
+      }
+    }
+
+    db.addAuditLog({
+      action: 'MANUAL_ATTENDANCE_RECORDED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: sessionId,
+      details: {
+        classId,
+        subjectId,
+        lectureTopic,
+        lectureNumber,
+        totalMarked: attendances.length,
+        presentCount: attendances.filter((a: any) => a.status === 'PRESENT').length,
+        locked: lockSession,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Manual Attendance saved successfully for ${attendances.length} students.${lockSession ? ' Session locked.' : ''}`,
+      data: { sessionId, isLocked: Boolean(lockSession), markedCount: attendances.length },
+    });
+  } catch (error) {
+    console.error('Manual attendance error:', error);
+    res.status(500).json({ success: false, message: 'Failed to record manual attendance.' });
+  }
+});
+
+// POST /api/faculty/sessions/:id/lock - Lock/Unlock session to prevent accidental changes
+router.post('/sessions/:id/lock', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const lock = req.body.lock !== undefined
+      ? Boolean(req.body.lock)
+      : req.body.is_locked !== undefined
+      ? Boolean(req.body.is_locked)
+      : req.body.isLocked !== undefined
+      ? Boolean(req.body.isLocked)
+      : true;
+
+    const session = db.getSessionById(id);
+
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Session not found.' });
+      return;
+    }
+
+    const updated = db.toggleSessionLock(id, lock, req.user!.name);
+
+    db.addAuditLog({
+      action: lock ? 'ATTENDANCE_SESSION_LOCKED' : 'ATTENDANCE_SESSION_UNLOCKED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { sessionTopic: session.lecture_topic, locked: lock },
+    });
+
+    res.json({
+      success: true,
+      message: lock ? 'Session has been locked against changes.' : 'Session unlocked for editing.',
+      data: {
+        ...updated,
+        isLocked: lock,
+        is_locked: lock,
+      },
+    });
+  } catch (error) {
+    console.error('Session lock error:', error);
+    res.status(500).json({ success: false, message: 'Could not change session lock state.' });
+  }
+});
+
+// GET /api/faculty/sessions/:id/attendance-sheet - Full attendance sheet with student details
+router.get('/sessions/:id/attendance-sheet', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const session = db.getSessionById(id);
+
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Session not found.' });
+      return;
+    }
+
+    const cls = db.getClassById(session.class_id);
+    const sub = db.getSubjects().find((s) => s.id === session.subject_id);
+    const students = db.getStudentsByClass(session.class_id);
+    const records = db.getAttendanceRecords({ sessionId: id });
+
+    const sheet = students.map((std) => {
+      const u = db.getUserById(std.user_id);
+      const rec = records.find((r) => r.student_id === std.id);
+      return {
+        studentId: std.id,
+        userId: std.user_id,
+        name: u ? u.name : 'Student',
+        email: u ? u.email : '',
+        rollNumber: std.roll_number,
+        studentCode: std.student_id,
+        status: rec ? rec.status : 'ABSENT',
+        markedAt: rec ? rec.marked_at : null,
+        method: rec?.device_id?.includes('faculty') ? 'MANUAL_FACULTY' : 'SMART_GEOLOCATION',
+        photoThumbnail: rec?.camera_image_path || null,
+        verificationStatus: rec?.camera_verification_status || null,
+      };
+    });
+
+    // Sort by roll number numerically or alphabetically
+    sheet.sort((a, b) => {
+      const numA = parseInt(a.rollNumber, 10);
+      const numB = parseInt(b.rollNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.rollNumber.localeCompare(b.rollNumber);
+    });
+
+    const presentCount = sheet.filter((s) => s.status === 'PRESENT').length;
+    const absentCount = sheet.length - presentCount;
+
+    res.json({
+      success: true,
+      data: {
+        session: {
+          id: session.id,
+          classId: session.class_id,
+          className: cls ? `${cls.class_name}.${cls.division}` : 'Class',
+          subjectId: session.subject_id,
+          subjectName: sub ? sub.subject_name : 'Subject',
+          subjectCode: sub?.subject_code || '',
+          lectureTopic: session.lecture_topic,
+          lectureNumber: session.lecture_number,
+          sessionDate: session.session_date,
+          startTime: session.start_time,
+          endTime: session.end_time,
+          status: session.status,
+          isLocked: session.is_locked,
+          lockedAt: session.locked_at,
+          lockedBy: session.locked_by,
+          attendanceMode: session.attendance_mode,
+        },
+        stats: {
+          totalEnrolled: sheet.length,
+          presentCount,
+          absentCount,
+          attendanceRate: sheet.length > 0 ? Math.round((presentCount / sheet.length) * 100) : 0,
+        },
+        students: sheet,
+      },
+    });
+  } catch (error) {
+    console.error('Fetch attendance sheet error:', error);
+    res.status(500).json({ success: false, message: 'Could not fetch attendance sheet.' });
   }
 });
 
@@ -878,6 +1385,20 @@ router.post('/sessions/:sessionId/override', (req: AuthenticatedRequest, res: Re
       return;
     }
 
+    const session = db.getSessionById(sessionId);
+    if (!session) {
+      res.status(404).json({ success: false, message: 'Session not found.' });
+      return;
+    }
+
+    if (session.is_locked) {
+      res.status(403).json({
+        success: false,
+        message: 'This attendance session is locked to prevent accidental changes. Please unlock the session first.',
+      });
+      return;
+    }
+
     const faculty = db.getFacultyByUserId(req.user!.id);
     if (!faculty) {
       res.status(403).json({ success: false, message: 'Only faculty can override attendance.' });
@@ -885,6 +1406,14 @@ router.post('/sessions/:sessionId/override', (req: AuthenticatedRequest, res: Re
     }
 
     db.overrideAttendance(sessionId, studentId, status === 'PRESENT' ? 'PRESENT' : 'ABSENT', faculty.id, reason);
+
+    db.addAuditLog({
+      action: 'ATTENDANCE_OVERRIDE',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: sessionId,
+      details: { studentId, status, reason },
+    });
 
     res.json({
       success: true,
@@ -1105,13 +1634,20 @@ router.get('/lecture-history', (req: AuthenticatedRequest, res: Response) => {
         date: sess.session_date,
         time: `${sess.start_time}${sess.end_time ? ' - ' + sess.end_time : ''}`,
         className: cls ? `${cls.class_name}.${cls.division}` : 'Class',
+        classId: sess.class_id,
         subjectName: sub?.subject_name || 'Subject',
+        subjectId: sess.subject_id,
         subjectCode: sub?.subject_code || '',
         topic: sess.lecture_topic,
+        lectureNumber: sess.lecture_number || null,
         radiusMeters: sess.radius_meters,
-        presentCount: records.length,
+        presentCount: records.filter((r) => r.status === 'PRESENT').length,
         totalEnrolled,
         status: sess.status,
+        isLocked: Boolean(sess.is_locked),
+        lockedAt: sess.locked_at || null,
+        lockedBy: sess.locked_by || null,
+        attendanceMode: sess.attendance_mode || 'SMART_GEOFENCE',
       };
     });
 
@@ -1121,6 +1657,422 @@ router.get('/lecture-history', (req: AuthenticatedRequest, res: Response) => {
   } catch (error) {
     console.error('Lecture history error:', error);
     res.status(500).json({ success: false, message: 'Could not fetch lecture history.' });
+  }
+});
+
+// GET /api/faculty/students-manage - List students for manual management
+router.get('/students-manage', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { classId } = req.query;
+    let students = db.getStudents();
+    if (classId) {
+      students = students.filter((s) => s.class_id === classId);
+    }
+
+    const data = students.map((std) => {
+      const u = db.getUserById(std.user_id);
+      const cls = db.getClassById(std.class_id);
+      return {
+        id: std.id,
+        userId: std.user_id,
+        name: u ? u.name : 'Student',
+        email: u ? u.email : '',
+        rollNumber: std.roll_number,
+        studentId: std.student_id,
+        classId: std.class_id,
+        className: cls ? `${cls.class_name}-${cls.division}` : 'Class',
+        courseName: cls?.course_name || 'B.Sc. Computer Science',
+        division: std.division,
+        academicYear: std.academic_year,
+        status: u?.status || 'active',
+      };
+    });
+
+    // Sort by roll number
+    data.sort((a, b) => {
+      const numA = parseInt(a.rollNumber, 10);
+      const numB = parseInt(b.rollNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.rollNumber.localeCompare(b.rollNumber);
+    });
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Students manage error:', error);
+    res.status(500).json({ success: false, message: 'Could not fetch students.' });
+  }
+});
+
+// POST /api/faculty/students-manage - Teacher manually adds a student
+router.post('/students-manage', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const {
+      name,
+      email,
+      rollNumber,
+      studentId,
+      classId,
+      division,
+      academicYear = '2026-27',
+      password = 'Student@2026',
+    } = req.body;
+
+    if (!name || !email || !rollNumber || !studentId || !classId) {
+      res.status(400).json({
+        success: false,
+        message: 'Name, Email, Roll Number, Student ID, and Class are required.',
+      });
+      return;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existingUser = db.getUserByEmail(cleanEmail);
+    if (existingUser) {
+      res.status(400).json({ success: false, message: 'A user account with this email address already exists.' });
+      return;
+    }
+
+    const allStudents = db.getStudents();
+    const duplicateRoll = allStudents.find((s) => s.class_id === classId && s.roll_number === rollNumber.trim());
+    if (duplicateRoll) {
+      res.status(400).json({ success: false, message: `Roll number ${rollNumber} already exists in this class.` });
+      return;
+    }
+
+    const cls = db.getClassById(classId);
+    const assignedDiv = division ? division.trim().toUpperCase() : (cls?.division || 'A');
+
+    const now = new Date().toISOString();
+    const userId = `usr_std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const studentEntityId = `std_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const newUser: User = {
+      id: userId,
+      name: name.trim(),
+      email: cleanEmail,
+      password_hash: passwordHash,
+      role: 'student',
+      status: 'active',
+      created_at: now,
+      updated_at: now,
+    };
+
+    const newStudent: Student = {
+      id: studentEntityId,
+      user_id: userId,
+      student_id: studentId.trim().toUpperCase(),
+      roll_number: rollNumber.trim(),
+      class_id: classId,
+      division: assignedDiv,
+      academic_year: academicYear,
+    };
+
+    db.addUser(newUser);
+    db.addStudent(newStudent);
+
+    // Auto join active classrooms for this class
+    const classrooms = db.getClassrooms().filter((c) => c.class_id === classId);
+    for (const c of classrooms) {
+      db.addClassroomMember({
+        id: `cm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        classroom_id: c.id,
+        student_id: studentEntityId,
+        status: 'active',
+        approved_by: req.user!.id,
+        joined_at: now,
+        created_at: now,
+      });
+    }
+
+    db.addAuditLog({
+      action: 'STUDENT_CREATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: studentEntityId,
+      details: { name: newUser.name, email: newUser.email, roll: newStudent.roll_number, class: cls?.class_name },
+    });
+
+    res.json({
+      success: true,
+      message: `Student ${newUser.name} (Roll: ${newStudent.roll_number}) added successfully.`,
+      data: {
+        id: newStudent.id,
+        userId: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        rollNumber: newStudent.roll_number,
+        studentId: newStudent.student_id,
+        classId: newStudent.class_id,
+        className: cls ? `${cls.class_name}-${cls.division}` : 'Class',
+        division: newStudent.division,
+      },
+    });
+  } catch (error) {
+    console.error('Create student error:', error);
+    res.status(500).json({ success: false, message: 'Could not create student.' });
+  }
+});
+
+// PUT /api/faculty/students-manage/:id - Edit student details
+router.put('/students-manage/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, email, rollNumber, studentId, classId, division } = req.body;
+
+    const student = db.getStudentById(id);
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found.' });
+      return;
+    }
+
+    const user = db.getUserById(student.user_id);
+    if (user) {
+      const userUpdates: any = {};
+      if (name) userUpdates.name = name.trim();
+      if (email) userUpdates.email = email.trim().toLowerCase();
+      db.updateUser(user.id, userUpdates);
+    }
+
+    const studentUpdates: any = {};
+    if (rollNumber) studentUpdates.roll_number = rollNumber.trim();
+    if (studentId) studentUpdates.student_id = studentId.trim().toUpperCase();
+    if (classId) studentUpdates.class_id = classId;
+    if (division) studentUpdates.division = division.trim().toUpperCase();
+
+    db.updateStudent(id, studentUpdates);
+
+    db.addAuditLog({
+      action: 'STUDENT_UPDATED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { name, rollNumber, studentId, classId },
+    });
+
+    res.json({ success: true, message: 'Student updated successfully.' });
+  } catch (error) {
+    console.error('Update student error:', error);
+    res.status(500).json({ success: false, message: 'Could not update student.' });
+  }
+});
+
+// DELETE /api/faculty/students-manage/:id - Delete student
+router.delete('/students-manage/:id', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const student = db.getStudentById(id);
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found.' });
+      return;
+    }
+
+    const u = db.getUserById(student.user_id);
+    db.deleteStudent(id);
+
+    db.addAuditLog({
+      action: 'STUDENT_DELETED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { name: u?.name, roll: student.roll_number },
+    });
+
+    res.json({ success: true, message: `Student ${u?.name || 'record'} removed successfully.` });
+  } catch (error) {
+    console.error('Delete student error:', error);
+    res.status(500).json({ success: false, message: 'Could not delete student.' });
+  }
+});
+
+// POST /api/faculty/students-manage/:id/assign - Assign student to class / classroom
+router.post('/students-manage/:id/assign', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { classId, classroomId } = req.body;
+
+    const student = db.getStudentById(id);
+    if (!student) {
+      res.status(404).json({ success: false, message: 'Student not found.' });
+      return;
+    }
+
+    if (classId) {
+      db.updateStudent(id, { class_id: classId });
+    }
+
+    if (classroomId) {
+      const existing = db.getClassroomMember(classroomId, id);
+      if (!existing) {
+        db.addClassroomMember({
+          id: `cm_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          classroom_id: classroomId,
+          student_id: id,
+          status: 'active',
+          approved_by: req.user!.id,
+          joined_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    db.addAuditLog({
+      action: 'STUDENT_ASSIGNED',
+      actor_id: req.user!.id,
+      actor_role: req.user!.role,
+      target_id: id,
+      details: { classId, classroomId },
+    });
+
+    res.json({ success: true, message: 'Student assignment updated successfully.' });
+  } catch (error) {
+    console.error('Assign student error:', error);
+    res.status(500).json({ success: false, message: 'Could not update student assignment.' });
+  }
+});
+
+// GET /api/faculty/audit-logs - Faculty audit logs
+router.get('/audit-logs', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { limit = '100', action, search } = req.query;
+    let logs = db.getAuditLogs(parseInt(limit as string, 10) || 100);
+
+    if (action) {
+      logs = logs.filter((l) => l.action.toLowerCase().includes((action as string).toLowerCase()));
+    }
+
+    if (search) {
+      const q = (search as string).toLowerCase();
+      logs = logs.filter((l) =>
+        l.action.toLowerCase().includes(q) ||
+        JSON.stringify(l.details || {}).toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ success: true, data: logs });
+  } catch (error) {
+    console.error('Audit logs error:', error);
+    res.status(500).json({ success: false, message: 'Could not fetch audit logs.' });
+  }
+});
+
+// GET /api/faculty/reports - Comprehensive Attendance Reports
+router.get('/reports', (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { subjectId, classId, studentId, startDate, endDate } = req.query;
+    const isFaculty = req.user!.role === 'faculty';
+    const faculty = isFaculty ? db.getFacultyByUserId(req.user!.id) : null;
+
+    // Filter sessions
+    let sessions = faculty
+      ? db.getAttendanceSessions({ facultyId: faculty.id })
+      : db.getAttendanceSessions();
+
+    if (classId) {
+      sessions = sessions.filter((s) => s.class_id === classId);
+    }
+    if (subjectId) {
+      sessions = sessions.filter((s) => s.subject_id === subjectId);
+    }
+    if (startDate) {
+      sessions = sessions.filter((s) => s.session_date >= (startDate as string));
+    }
+    if (endDate) {
+      sessions = sessions.filter((s) => s.session_date <= (endDate as string));
+    }
+
+    const pastSessions = sessions.filter((s) => s.status === 'CLOSED');
+    const totalLectures = pastSessions.length;
+
+    // Filter students
+    let students = db.getStudents();
+    if (classId) {
+      students = students.filter((s) => s.class_id === classId);
+    }
+    if (studentId) {
+      students = students.filter((s) => s.id === studentId);
+    }
+
+    const settings = db.getSettings();
+    const threshold = settings.low_attendance_threshold || 75;
+
+    const studentRows = students.map((std) => {
+      const u = db.getUserById(std.user_id);
+      const cls = db.getClassById(std.class_id);
+      const records = db.getAttendanceRecords({ studentId: std.id });
+      
+      const attended = records.filter((r) =>
+        r.status === 'PRESENT' && pastSessions.some((s) => s.id === r.session_id)
+      ).length;
+
+      const absent = Math.max(0, totalLectures - attended);
+      const percentage = totalLectures > 0 ? Math.round((attended / totalLectures) * 10000) / 100 : 100;
+
+      return {
+        studentId: std.id,
+        rollNumber: std.roll_number,
+        studentCode: std.student_id,
+        name: u ? u.name : 'Student',
+        email: u ? u.email : '',
+        className: cls ? `${cls.class_name}.${cls.division}` : 'Class',
+        division: std.division,
+        totalLectures,
+        attendedCount: attended,
+        absentCount: absent,
+        percentage,
+        isDefaulter: totalLectures > 0 && percentage < threshold,
+      };
+    });
+
+    studentRows.sort((a, b) => {
+      const numA = parseInt(a.rollNumber, 10);
+      const numB = parseInt(b.rollNumber, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.rollNumber.localeCompare(b.rollNumber);
+    });
+
+    const defaulters = studentRows.filter((s) => s.isDefaulter);
+    const avgPercentage = studentRows.length > 0
+      ? Math.round(studentRows.reduce((acc, s) => acc + s.percentage, 0) / studentRows.length)
+      : 100;
+
+    const lecturesList = pastSessions.map((s) => {
+      const cls = db.getClassById(s.class_id);
+      const sub = db.getSubjects().find((sub) => sub.id === s.subject_id);
+      const recs = db.getAttendanceRecords({ sessionId: s.id });
+      const presentCount = recs.filter((r) => r.status === 'PRESENT').length;
+      return {
+        id: s.id,
+        date: s.session_date,
+        time: s.start_time,
+        topic: s.lecture_topic,
+        lectureNumber: s.lecture_number || null,
+        className: cls ? `${cls.class_name}.${cls.division}` : 'Class',
+        subjectName: sub ? sub.subject_name : 'Subject',
+        subjectCode: sub?.subject_code || '',
+        presentCount,
+        isLocked: Boolean(s.is_locked),
+        attendanceMode: s.attendance_mode || 'SMART_GEOFENCE',
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalLectures,
+          totalStudents: studentRows.length,
+          averageAttendanceRate: avgPercentage,
+          defaultersCount: defaulters.length,
+          threshold,
+        },
+        students: studentRows,
+        lectures: lecturesList,
+      },
+    });
+  } catch (error) {
+    console.error('Reports error:', error);
+    res.status(500).json({ success: false, message: 'Could not generate report.' });
   }
 });
 

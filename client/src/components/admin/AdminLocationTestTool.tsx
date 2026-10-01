@@ -32,7 +32,7 @@ export const AdminLocationTestTool: React.FC<AdminLocationTestToolProps> = ({
   const [testLng, setTestLng] = useState<number>(collegeLng + 0.000015);
   const [radius, setRadius] = useState<number>(defaultRadius);
   const [testAccuracy, setTestAccuracy] = useState<number>(5);
-  const [adminViewMode, setAdminViewMode] = useState<'radar' | 'map'>('radar');
+  const [adminViewMode, setAdminViewMode] = useState<'radar' | 'map'>('map');
 
   const calculatedDistance = calculateHaversineDistance(testLat, testLng, collegeLat, collegeLng);
   const isInside = calculatedDistance <= radius;

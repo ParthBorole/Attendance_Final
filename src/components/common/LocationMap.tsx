@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 
 interface LocationMapProps {
@@ -28,9 +28,15 @@ export const LocationMap: React.FC<LocationMapProps> = ({
   const collegeMarkerRef = useRef<L.Marker | null>(null);
   const studentMarkerRef = useRef<L.Marker | null>(null);
   const lineLayerRef = useRef<L.Polyline | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  const [isSatellite, setIsSatellite] = useState<boolean>(true); // Default to satellite view
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
+
+    const standardUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    const satelliteUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
@@ -40,13 +46,24 @@ export const LocationMap: React.FC<LocationMapProps> = ({
         attributionControl: false,
       });
 
-      // CartoDB Positron clean map tiles (clean, light, perfect for campus maps)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      const tileLayer = L.tileLayer(isSatellite ? satelliteUrl : standardUrl, {
         maxZoom: 20,
-        subdomains: 'abcd',
+        subdomains: isSatellite ? undefined : 'abcd',
       }).addTo(map);
 
+      tileLayerRef.current = tileLayer;
       mapInstanceRef.current = map;
+    } else {
+      // Update tile layer if toggle changed
+      const map = mapInstanceRef.current;
+      if (tileLayerRef.current) {
+        map.removeLayer(tileLayerRef.current);
+      }
+      const tileLayer = L.tileLayer(isSatellite ? satelliteUrl : standardUrl, {
+        maxZoom: 20,
+        subdomains: isSatellite ? undefined : 'abcd',
+      }).addTo(map);
+      tileLayerRef.current = tileLayer;
     }
 
     const map = mapInstanceRef.current;
@@ -81,8 +98,8 @@ export const LocationMap: React.FC<LocationMapProps> = ({
       circleLayerRef.current.setStyle({
         color: circleColor,
         fillColor: circleColor,
-        fillOpacity: 0.18,
-        weight: 2,
+        fillOpacity: 0.22,
+        weight: 2.5,
         dashArray: isInside ? undefined : '4, 4',
       });
     } else {
@@ -90,8 +107,8 @@ export const LocationMap: React.FC<LocationMapProps> = ({
         radius: radiusMeters,
         color: circleColor,
         fillColor: circleColor,
-        fillOpacity: 0.18,
-        weight: 2,
+        fillOpacity: 0.22,
+        weight: 2.5,
       }).addTo(map);
     }
 
@@ -159,7 +176,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({
         lineLayerRef.current = null;
       }
     }
-  }, [collegeLat, collegeLng, collegeName, studentLat, studentLng, radiusMeters, isInside, accuracy]);
+  }, [collegeLat, collegeLng, collegeName, studentLat, studentLng, radiusMeters, isInside, accuracy, isSatellite]);
 
   const handleRecenter = () => {
     if (!mapInstanceRef.current) return;
@@ -175,7 +192,7 @@ export const LocationMap: React.FC<LocationMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-64 sm:h-72 rounded-xl overflow-hidden border border-stone-200 shadow-inner bg-stone-100">
+    <div className="relative w-full h-64 sm:h-72 rounded-xl overflow-hidden border border-stone-200 shadow-inner bg-stone-900">
       <div ref={mapContainerRef} className="w-full h-full" />
       
       {/* Map floating control badge */}
@@ -190,14 +207,27 @@ export const LocationMap: React.FC<LocationMapProps> = ({
         )}
       </div>
 
-      <button
-        onClick={handleRecenter}
-        type="button"
-        className="absolute top-3 right-3 z-[1000] bg-white/95 hover:bg-white text-stone-700 p-2 rounded-lg shadow-sm border border-stone-200 text-xs font-semibold cursor-pointer transition-colors"
-        title="Re-center map"
-      >
-        Center
-      </button>
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2">
+        <button
+          onClick={() => setIsSatellite(!isSatellite)}
+          type="button"
+          className={`px-3 py-1.5 rounded-lg shadow-sm border text-xs font-bold cursor-pointer transition-colors ${
+            isSatellite
+              ? 'bg-stone-900 text-white border-stone-900'
+              : 'bg-white/95 hover:bg-white text-stone-800 border-stone-200'
+          }`}
+        >
+          {isSatellite ? '🛰️ Satellite View' : '🗺️ Map View'}
+        </button>
+        <button
+          onClick={handleRecenter}
+          type="button"
+          className="bg-white/95 hover:bg-white text-stone-700 px-3 py-1.5 rounded-lg shadow-sm border border-stone-200 text-xs font-semibold cursor-pointer transition-colors"
+          title="Re-center map"
+        >
+          Center
+        </button>
+      </div>
     </div>
   );
 };

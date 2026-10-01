@@ -135,6 +135,7 @@ export interface AttendanceSession {
   classroom_id?: string;
   faculty_id: string;
   lecture_topic: string;
+  lecture_number?: number | string;
   session_date: string;
   start_time: string;
   end_time?: string;
@@ -142,6 +143,10 @@ export interface AttendanceSession {
   center_latitude: number;
   center_longitude: number;
   status: SessionStatus;
+  is_locked?: boolean;
+  locked_at?: string;
+  locked_by?: string;
+  attendance_mode?: 'SMART_GEOFENCE' | 'MANUAL';
   created_at: string;
 }
 
@@ -161,6 +166,9 @@ export interface AttendanceRecord {
   camera_image_path: string;
   camera_verification_status: 'VERIFIED' | 'FAILED';
   device_id?: string;
+  marked_by?: string;
+  method?: 'SMART_GEOLOCATION' | 'MANUAL_FACULTY' | 'FACULTY_OVERRIDE';
+  notes?: string;
   created_at: string;
 }
 

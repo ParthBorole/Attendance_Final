@@ -56,11 +56,24 @@ export class ApiService {
 
       try {
         data = JSON.parse(text);
+        // If parsed JSON has a message and response is not ok, ensure we return data.message
+        if (!response.ok) {
+          return {
+            success: false,
+            message: data?.message || (response.status === 403 ? 'Access Denied: Administrator privileges required.' : `Request failed with status ${response.status}`),
+            ...data,
+          };
+        }
+        return data;
       } catch {
         // Non-JSON response (e.g., HTML during server restart or proxy error)
         let fallbackMessage = 'An unexpected response was received from the server.';
         if (response.status === 403) {
-          fallbackMessage = 'Access Denied: You do not have permission for this administrative action. Please log in with the administrator account.';
+          if (endpoint.includes('/auth/')) {
+            fallbackMessage = 'Authentication failed. Please check your credentials and try again.';
+          } else {
+            fallbackMessage = 'Access Denied: You do not have permission for this action. Please log in with the appropriate account.';
+          }
         } else if (response.status === 401) {
           fallbackMessage = 'Authentication required or session expired. Please sign in again.';
         } else if (response.status === 404) {
@@ -74,16 +87,6 @@ export class ApiService {
           message: fallbackMessage,
         };
       }
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: data?.message || (response.status === 403 ? 'Access Denied: Administrator privileges required.' : `Request failed with status ${response.status}`),
-          ...data,
-        };
-      }
-
-      return data;
     } catch (error: any) {
       return {
         success: false,
@@ -248,17 +251,101 @@ export class ApiService {
     return this.request('/faculty/classes');
   }
 
+  public static async createFacultyClass(payload: { course_name?: string; class_name: string; division: string; academic_year?: string }) {
+    return this.request('/faculty/classes', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async updateFacultyClass(id: string, payload: any) {
+    return this.request(`/faculty/classes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async deleteFacultyClass(id: string) {
+    return this.request(`/faculty/classes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   public static async getFacultySubjects(classId?: string) {
     const query = classId ? `?classId=${classId}` : '';
     return this.request(`/faculty/subjects${query}`);
+  }
+
+  public static async createFacultySubject(payload: { subject_name: string; subject_code: string; class_id: string }) {
+    return this.request('/faculty/subjects', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async updateFacultySubject(id: string, payload: any) {
+    return this.request(`/faculty/subjects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async deleteFacultySubject(id: string) {
+    return this.request(`/faculty/subjects/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public static async getFacultyStudentsManage(classId?: string) {
+    const query = classId ? `?classId=${classId}` : '';
+    return this.request(`/faculty/students-manage${query}`);
+  }
+
+  public static async createFacultyStudent(payload: {
+    name: string;
+    email: string;
+    rollNumber: string;
+    studentId: string;
+    classId: string;
+    division?: string;
+    academicYear?: string;
+    password?: string;
+  }) {
+    return this.request('/faculty/students-manage', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async updateFacultyStudent(id: string, payload: any) {
+    return this.request(`/faculty/students-manage/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async deleteFacultyStudent(id: string) {
+    return this.request(`/faculty/students-manage/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  public static async assignFacultyStudent(id: string, payload: { classId?: string; classroomId?: string }) {
+    return this.request(`/faculty/students-manage/${id}/assign`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   }
 
   public static async createAttendanceSession(payload: {
     classId: string;
     subjectId: string;
     lectureTopic: string;
-    radiusMeters: number;
+    lectureNumber?: number | string;
+    radiusMeters?: number;
     sessionDate?: string;
+    startTime?: string;
+    attendanceMode?: 'SMART_GEOFENCE' | 'MANUAL';
     latitude?: number;
     longitude?: number;
   }) {
@@ -266,6 +353,35 @@ export class ApiService {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  public static async recordManualAttendance(payload: {
+    existingSessionId?: string;
+    classId: string;
+    subjectId: string;
+    lectureTopic: string;
+    lectureNumber?: number | string;
+    sessionDate?: string;
+    startTime?: string;
+    endTime?: string;
+    attendances: Array<{ studentId: string; status: 'PRESENT' | 'ABSENT'; notes?: string }>;
+    lockSession?: boolean;
+  }) {
+    return this.request('/faculty/sessions/manual-record', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public static async toggleSessionLock(sessionId: string, lock: boolean) {
+    return this.request(`/faculty/sessions/${sessionId}/lock`, {
+      method: 'POST',
+      body: JSON.stringify({ lock }),
+    });
+  }
+
+  public static async getSessionAttendanceSheet(sessionId: string) {
+    return this.request(`/faculty/sessions/${sessionId}/attendance-sheet`);
   }
 
   public static async stopAttendanceSession(sessionId: string) {
@@ -299,6 +415,32 @@ export class ApiService {
 
   public static async getLectureHistory() {
     return this.request('/faculty/lecture-history');
+  }
+
+  public static async getFacultyAuditLogs(params?: { limit?: number; action?: string; search?: string }) {
+    const q = new URLSearchParams();
+    if (params?.limit) q.append('limit', params.limit.toString());
+    if (params?.action) q.append('action', params.action);
+    if (params?.search) q.append('search', params.search);
+    const query = q.toString() ? `?${q.toString()}` : '';
+    return this.request(`/faculty/audit-logs${query}`);
+  }
+
+  public static async getFacultyReports(params?: {
+    subjectId?: string;
+    classId?: string;
+    studentId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const q = new URLSearchParams();
+    if (params?.subjectId) q.append('subjectId', params.subjectId);
+    if (params?.classId) q.append('classId', params.classId);
+    if (params?.studentId) q.append('studentId', params.studentId);
+    if (params?.startDate) q.append('startDate', params.startDate);
+    if (params?.endDate) q.append('endDate', params.endDate);
+    const query = q.toString() ? `?${q.toString()}` : '';
+    return this.request(`/faculty/reports${query}`);
   }
 
   // Admin Endpoints

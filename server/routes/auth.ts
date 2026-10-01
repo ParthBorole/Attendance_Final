@@ -221,7 +221,6 @@ router.post('/register', async (req: Request, res: Response) => {
     res.json({
       success: true,
       requiresOtp: true,
-      otp,
       email: emailClean,
       role: userObj.role,
       message: emailResult.deliveredRealEmail
@@ -300,7 +299,6 @@ router.post('/request-reset-otp', async (req: Request, res: Response) => {
     res.json({
       success: true,
       requiresOtp: true,
-      otp,
       email: user.email,
       message: emailResult.deliveredRealEmail
         ? `A 6-digit Password Reset OTP has been sent to ${user.email}. Please check your Gmail Inbox.`
@@ -450,6 +448,24 @@ router.post('/find-username', (req: Request, res: Response) => {
         if (u) {
           foundUser = u;
           extraDetails = `Faculty • Department of ${fMatch.department} (Emp ID: ${fMatch.employee_id})`;
+        }
+      }
+    }
+
+    // Also match by email or name directly
+    if (!foundUser) {
+      const directUser = db.getUserByEmail(clean) || db.getUsers().find((u) => u.name.toLowerCase().includes(clean));
+      if (directUser) {
+        foundUser = directUser;
+        if (directUser.role === 'student') {
+          const std = db.getStudentByUserId(directUser.id);
+          const cls = std ? db.getClassById(std.class_id) : null;
+          extraDetails = `Student • ${cls ? cls.class_name + '-' + cls.division : 'Enrolled'} ${std ? `(Roll: ${std.roll_number})` : ''}`;
+        } else if (directUser.role === 'faculty') {
+          const fac = db.getFacultyByUserId(directUser.id);
+          extraDetails = `Faculty • ${fac ? `Department of ${fac.department} (${fac.short_code})` : 'Faculty Member'}`;
+        } else {
+          extraDetails = 'Institutional System Administrator';
         }
       }
     }
@@ -712,7 +728,6 @@ router.post('/login', async (req: Request, res: Response) => {
     res.json({
       success: true,
       requiresOtp: true,
-      otp,
       email: emailClean,
       role: user.role,
       message: emailResult.deliveredRealEmail

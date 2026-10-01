@@ -6,9 +6,9 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'attendsecure_production_secret_key_tsdc_2026_jwt_token_auth',
   college: {
-    name: process.env.VITE_COLLEGE_NAME || 'Thakur Shyamnarayan Degree College (TSDC)',
-    latitude: parseFloat(process.env.VITE_DEFAULT_LAT || '19.2138050'),
-    longitude: parseFloat(process.env.VITE_DEFAULT_LNG || '72.8648690'),
+    name: process.env.VITE_COLLEGE_NAME || 'Thakur Shyamnarayan Degree College (TSDC), Kandivali (East)',
+    latitude: parseFloat(process.env.VITE_DEFAULT_LAT || '19.213805'),
+    longitude: parseFloat(process.env.VITE_DEFAULT_LNG || '72.864810'),
     defaultGeofenceRadiusMeters: 50,
   },
   email: {

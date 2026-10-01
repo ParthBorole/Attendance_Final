@@ -25,9 +25,9 @@ const DB_FILE = path.resolve(DATA_DIR, 'attendsecure.json');
 
 const DEFAULT_SETTINGS: InstitutionSettings = {
   id: 'inst_tsdc_01',
-  college_name: 'Thakur Shyamnarayan Degree College (TSDC)',
+  college_name: 'Thakur Shyamnarayan Degree College (TSDC), Kandivali (East)',
   official_latitude: 19.213805,
-  official_longitude: 72.864869,
+  official_longitude: 72.864810,
   default_radius: 10,
   min_radius: 1,
   max_radius: 50,
@@ -891,6 +891,25 @@ class DatabaseManager {
     this.save();
   }
 
+  public updateStudent(id: string, updates: Partial<Student>) {
+    const idx = this.db.students.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      this.db.students[idx] = { ...this.db.students[idx], ...updates };
+      this.save();
+    }
+  }
+
+  public deleteStudent(id: string) {
+    const student = this.db.students.find((s) => s.id === id);
+    if (student) {
+      this.db.students = this.db.students.filter((s) => s.id !== id);
+      this.db.users = this.db.users.filter((u) => u.id !== student.user_id);
+      this.db.classroom_members = this.db.classroom_members.filter((cm) => cm.student_id !== id);
+      this.db.attendance_records = this.db.attendance_records.filter((ar) => ar.student_id !== id);
+      this.save();
+    }
+  }
+
   public addFaculty(faculty: Faculty) {
     this.db.faculty.push(faculty);
     this.save();
@@ -927,9 +946,41 @@ class DatabaseManager {
     }
   }
 
+  public deleteClass(id: string) {
+    this.db.classes = this.db.classes.filter((c) => c.id !== id);
+    this.db.faculty_assignments = this.db.faculty_assignments.filter((fa) => fa.class_id !== id);
+    this.save();
+  }
+
   public addSubject(subject: SubjectEntity) {
     this.db.subjects.push(subject);
     this.save();
+  }
+
+  public updateSubject(id: string, updates: Partial<SubjectEntity>) {
+    const idx = this.db.subjects.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      this.db.subjects[idx] = { ...this.db.subjects[idx], ...updates };
+      this.save();
+    }
+  }
+
+  public deleteSubject(id: string) {
+    this.db.subjects = this.db.subjects.filter((s) => s.id !== id);
+    this.db.faculty_assignments = this.db.faculty_assignments.filter((fa) => fa.subject_id !== id);
+    this.save();
+  }
+
+  public toggleSessionLock(sessionId: string, isLocked: boolean, lockedBy: string) {
+    const idx = this.db.attendance_sessions.findIndex((s) => s.id === sessionId);
+    if (idx !== -1) {
+      this.db.attendance_sessions[idx].is_locked = isLocked;
+      this.db.attendance_sessions[idx].locked_at = isLocked ? new Date().toISOString() : undefined;
+      this.db.attendance_sessions[idx].locked_by = isLocked ? lockedBy : undefined;
+      this.save();
+      return this.db.attendance_sessions[idx];
+    }
+    return undefined;
   }
 
   public addFacultyAssignment(fa: FacultyAssignment) {

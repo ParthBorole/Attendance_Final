@@ -1,7 +1,6 @@
-/// <reference types="@types/google.maps" />
 import React, { useEffect, useState, useRef } from 'react';
-import { Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
-import { Building2, Navigation, MapPin, ZoomIn, ZoomOut, Compass, UserCheck } from 'lucide-react';
+import L from 'leaflet';
+import { Building2, Navigation, MapPin, Layers, Crosshair, ZoomIn, ZoomOut, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface GoogleLocationMapProps {
   collegeLat: number;
@@ -15,134 +14,6 @@ interface GoogleLocationMapProps {
   className?: string;
 }
 
-// Map helper to draw circle and polyline using google.maps geometry and adjust bounds
-const MapOverlayHelper: React.FC<{
-  collegeLat: number;
-  collegeLng: number;
-  studentLat?: number | null;
-  studentLng?: number | null;
-  radiusMeters: number;
-  isInside?: boolean | null;
-  accuracy?: number | null;
-}> = ({ collegeLat, collegeLng, studentLat, studentLng, radiusMeters, isInside, accuracy }) => {
-  const map = useMap();
-  const circleRef = useRef<google.maps.Circle | null>(null);
-  const accuracyCircleRef = useRef<google.maps.Circle | null>(null);
-  const lineRef = useRef<google.maps.Polyline | null>(null);
-
-  useEffect(() => {
-    if (!map) return;
-
-    const collegePos = { lat: collegeLat, lng: collegeLng };
-    const circleColor = isInside === true ? '#10B981' : isInside === false ? '#EF4444' : '#F59E0B';
-
-    // 1. Draw Attendance Radius Circle around College
-    if (!circleRef.current) {
-      circleRef.current = new google.maps.Circle({
-        map,
-        center: collegePos,
-        radius: radiusMeters,
-        fillColor: circleColor,
-        fillOpacity: 0.18,
-        strokeColor: circleColor,
-        strokeOpacity: 0.9,
-        strokeWeight: 2,
-        clickable: false,
-      });
-    } else {
-      circleRef.current.setCenter(collegePos);
-      circleRef.current.setRadius(radiusMeters);
-      circleRef.current.setOptions({
-        fillColor: circleColor,
-        strokeColor: circleColor,
-      });
-    }
-
-    // 2. Draw Accuracy Ring around Student Blue Dot
-    if (studentLat && studentLng && accuracy && accuracy > 0) {
-      const studentPos = { lat: studentLat, lng: studentLng };
-      if (!accuracyCircleRef.current) {
-        accuracyCircleRef.current = new google.maps.Circle({
-          map,
-          center: studentPos,
-          radius: Math.min(accuracy, 100),
-          fillColor: '#2563EB',
-          fillOpacity: 0.12,
-          strokeColor: '#3B82F6',
-          strokeOpacity: 0.6,
-          strokeWeight: 1.5,
-          clickable: false,
-        });
-      } else {
-        accuracyCircleRef.current.setCenter(studentPos);
-        accuracyCircleRef.current.setRadius(Math.min(accuracy, 100));
-      }
-    } else if (accuracyCircleRef.current) {
-      accuracyCircleRef.current.setMap(null);
-      accuracyCircleRef.current = null;
-    }
-
-    // 3. Draw Connecting Distance Line
-    if (studentLat && studentLng) {
-      const studentPos = { lat: studentLat, lng: studentLng };
-      const path = [collegePos, studentPos];
-      if (!lineRef.current) {
-        lineRef.current = new google.maps.Polyline({
-          map,
-          path,
-          geodesic: true,
-          strokeColor: '#2563EB',
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
-          icons: [
-            {
-              icon: {
-                path: 'M 0,-1 0,1',
-                strokeOpacity: 1,
-                scale: 3,
-              },
-              offset: '0',
-              repeat: '15px',
-            },
-          ],
-        });
-      } else {
-        lineRef.current.setPath(path);
-      }
-
-      // Auto-fit bounds to include college and student
-      const bounds = new google.maps.LatLngBounds();
-      bounds.extend(collegePos);
-      bounds.extend(studentPos);
-      map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
-    } else {
-      if (lineRef.current) {
-        lineRef.current.setMap(null);
-        lineRef.current = null;
-      }
-      map.setCenter(collegePos);
-      map.setZoom(19);
-    }
-
-    return () => {
-      if (circleRef.current) {
-        circleRef.current.setMap(null);
-        circleRef.current = null;
-      }
-      if (accuracyCircleRef.current) {
-        accuracyCircleRef.current.setMap(null);
-        accuracyCircleRef.current = null;
-      }
-      if (lineRef.current) {
-        lineRef.current.setMap(null);
-        lineRef.current = null;
-      }
-    };
-  }, [map, collegeLat, collegeLng, studentLat, studentLng, radiusMeters, isInside, accuracy]);
-
-  return null;
-};
-
 export const GoogleLocationMap: React.FC<GoogleLocationMapProps> = ({
   collegeLat,
   collegeLng,
@@ -154,114 +25,326 @@ export const GoogleLocationMap: React.FC<GoogleLocationMapProps> = ({
   accuracy,
   className = 'h-64 sm:h-72',
 }) => {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  const [mapType, setMapType] = useState<'roadmap' | 'hybrid'>('roadmap');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const circleLayerRef = useRef<L.Circle | null>(null);
+  const accuracyCircleRef = useRef<L.Circle | null>(null);
+  const collegeMarkerRef = useRef<L.Marker | null>(null);
+  const studentMarkerRef = useRef<L.Marker | null>(null);
+  const lineLayerRef = useRef<L.Polyline | null>(null);
+
+  // Map view style: 'satellite' (Hybrid Aerial with roads/labels) vs 'street' (Roadmap)
+  const [mapStyle, setMapStyle] = useState<'satellite' | 'street'>('satellite');
+
+  // Tile URL definitions
+  const getTileConfig = (style: 'satellite' | 'street') => {
+    if (style === 'satellite') {
+      // Google Hybrid Satellite Tiles (High-resolution aerial photography + roads + building names)
+      return {
+        url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        attribution: '&copy; Google Maps Satellite Imagery',
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      };
+    } else {
+      // Clean CartoDB Voyager street map
+      return {
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 20,
+        subdomains: 'abcd',
+      };
+    }
+  };
+
+  // Initialize Leaflet Map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    if (!mapInstanceRef.current) {
+      const map = L.map(mapContainerRef.current, {
+        center: [collegeLat, collegeLng],
+        zoom: 19,
+        zoomControl: false,
+        attributionControl: false,
+      });
+
+      const config = getTileConfig(mapStyle);
+      const layer = L.tileLayer(config.url, {
+        maxZoom: config.maxZoom,
+        subdomains: config.subdomains,
+      }).addTo(map);
+
+      tileLayerRef.current = layer;
+      mapInstanceRef.current = map;
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update Tile Layer when mapStyle changes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    const config = getTileConfig(mapStyle);
+    const layer = L.tileLayer(config.url, {
+      maxZoom: config.maxZoom,
+      subdomains: config.subdomains,
+    }).addTo(map);
+
+    tileLayerRef.current = layer;
+  }, [mapStyle]);
+
+  // Update Map Markers, Circles, and Bounds
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const collegePos: L.LatLngExpression = [collegeLat, collegeLng];
+
+    // 1. College Anchor Marker
+    const collegeIcon = L.divIcon({
+      className: 'college-satellite-pin',
+      html: `
+        <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transform: translate(-50%, -50%);">
+          <div style="background-color: #0f172a; color: #fbbf24; width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2.5px solid #fbbf24; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+            <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <div style="background-color: rgba(15, 23, 42, 0.9); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px; margin-top: 4px; border: 1px solid #334155; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
+            TSDC Center
+          </div>
+        </div>
+      `,
+      iconSize: [36, 56],
+      iconAnchor: [0, 0],
+    });
+
+    if (collegeMarkerRef.current) {
+      collegeMarkerRef.current.setLatLng(collegePos);
+    } else {
+      collegeMarkerRef.current = L.marker(collegePos, { icon: collegeIcon })
+        .addTo(map)
+        .bindPopup(`<b>${collegeName}</b><br>Official Attendance Center`);
+    }
+
+    // 2. Geofence Radius Circle
+    const circleColor = isInside === true ? '#10b981' : isInside === false ? '#ef4444' : '#f59e0b';
+    if (circleLayerRef.current) {
+      circleLayerRef.current.setLatLng(collegePos);
+      circleLayerRef.current.setRadius(radiusMeters);
+      circleLayerRef.current.setStyle({
+        color: circleColor,
+        fillColor: circleColor,
+        fillOpacity: 0.18,
+        weight: 2.5,
+        dashArray: isInside ? undefined : '5, 5',
+      });
+    } else {
+      circleLayerRef.current = L.circle(collegePos, {
+        radius: radiusMeters,
+        color: circleColor,
+        fillColor: circleColor,
+        fillOpacity: 0.18,
+        weight: 2.5,
+        dashArray: isInside ? undefined : '5, 5',
+      }).addTo(map);
+    }
+
+    // 3. Student Live GPS Blue Dot Marker
+    if (studentLat && studentLng) {
+      const studentPos: L.LatLngExpression = [studentLat, studentLng];
+      const studentColor = isInside ? '#10b981' : '#3b82f6';
+
+      const studentIcon = L.divIcon({
+        className: 'student-satellite-pin',
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; transform: translate(-50%, -50%);">
+            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background-color: rgba(59, 130, 246, 0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+              <div style="width: 22px; height: 22px; border-radius: 50%; background-color: #2563eb; border: 3px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;">
+                <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #ffffff;"></div>
+              </div>
+            </div>
+            <div style="background-color: #2563eb; color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px; margin-top: 4px; border: 1.5px solid #93c5fd; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 4px;">
+              <span>🔵 YOU (Device GPS)</span>
+            </div>
+          </div>
+        `,
+        iconSize: [34, 52],
+        iconAnchor: [0, 0],
+      });
+
+      if (studentMarkerRef.current) {
+        studentMarkerRef.current.setLatLng(studentPos);
+      } else {
+        studentMarkerRef.current = L.marker(studentPos, { icon: studentIcon })
+          .addTo(map)
+          .bindPopup(`<b>Your Device Location</b><br>Accuracy: ±${accuracy || 5}m`);
+      }
+
+      // Accuracy ring
+      if (accuracy && accuracy > 0) {
+        if (accuracyCircleRef.current) {
+          accuracyCircleRef.current.setLatLng(studentPos);
+          accuracyCircleRef.current.setRadius(Math.min(accuracy, 80));
+        } else {
+          accuracyCircleRef.current = L.circle(studentPos, {
+            radius: Math.min(accuracy, 80),
+            color: '#3b82f6',
+            fillColor: '#60a5fa',
+            fillOpacity: 0.15,
+            weight: 1.5,
+          }).addTo(map);
+        }
+      }
+
+      // Connecting Polyline
+      if (lineLayerRef.current) {
+        lineLayerRef.current.setLatLngs([collegePos, studentPos]);
+        lineLayerRef.current.setStyle({ color: studentColor });
+      } else {
+        lineLayerRef.current = L.polyline([collegePos, studentPos], {
+          color: studentColor,
+          weight: 2.5,
+          dashArray: '6, 6',
+          opacity: 0.85,
+        }).addTo(map);
+      }
+
+      // Fit bounds to show college & student
+      const bounds = L.latLngBounds([collegePos, studentPos]);
+      map.fitBounds(bounds.pad(0.35), { maxZoom: 19, padding: [30, 30] });
+    } else {
+      if (studentMarkerRef.current) {
+        map.removeLayer(studentMarkerRef.current);
+        studentMarkerRef.current = null;
+      }
+      if (accuracyCircleRef.current) {
+        map.removeLayer(accuracyCircleRef.current);
+        accuracyCircleRef.current = null;
+      }
+      if (lineLayerRef.current) {
+        map.removeLayer(lineLayerRef.current);
+        lineLayerRef.current = null;
+      }
+      map.setView(collegePos, 19);
+    }
+  }, [collegeLat, collegeLng, studentLat, studentLng, radiusMeters, isInside, accuracy]);
+
+  // Recenter actions
+  const handleRecenterCollege = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([collegeLat, collegeLng], 19);
+    }
+  };
+
+  const handleRecenterStudent = () => {
+    if (mapInstanceRef.current && studentLat && studentLng) {
+      mapInstanceRef.current.setView([studentLat, studentLng], 19);
+    }
+  };
+
+  const handleZoomIn = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.zoomOut();
+    }
+  };
 
   return (
-    <div className={`relative w-full rounded-2xl overflow-hidden border border-stone-200 shadow-inner bg-stone-900 ${className}`}>
-      {apiKey ? (
-        <Map
-          defaultCenter={{ lat: collegeLat, lng: collegeLng }}
-          defaultZoom={19}
-          mapId="attendsecure_campus_map"
-          mapTypeId={mapType}
-          disableDefaultUI={true}
-          gestureHandling="cooperative"
-          internalUsageAttributionIds={["gmp_mcp_codeassist_v1_aistudio"]}
-          className="w-full h-full"
+    <div className={`relative w-full rounded-2xl overflow-hidden border border-stone-800 shadow-xl bg-stone-950 ${className}`}>
+      {/* Real Leaflet Satellite / Street Map Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0" />
+
+      {/* Top Left: Live Blue Dot Banner */}
+      <div className="absolute top-3 left-3 z-10 bg-slate-900/90 text-white backdrop-blur-md px-3 py-1 rounded-xl shadow-lg border border-slate-700 text-[10px] font-extrabold flex items-center gap-1.5 pointer-events-none">
+        <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+        <span>🛰️ HD Satellite Imagery</span>
+      </div>
+
+      {/* Top Right: Satellite / Street Map Switcher */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-stone-900/90 backdrop-blur-md p-1 rounded-xl shadow-lg border border-stone-700 text-xs font-bold text-stone-200">
+        <button
+          type="button"
+          onClick={() => setMapStyle('satellite')}
+          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
+            mapStyle === 'satellite'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-stone-400 hover:text-white'
+          }`}
+          title="Switch to Real Satellite Aerial Imagery"
         >
-          {/* Overlays (Radius Circle, Accuracy Ring, Polyline) */}
-          <MapOverlayHelper
-            collegeLat={collegeLat}
-            collegeLng={collegeLng}
-            studentLat={studentLat}
-            studentLng={studentLng}
-            radiusMeters={radiusMeters}
-            isInside={isInside}
-            accuracy={accuracy}
-          />
+          <span>🛰️ Satellite</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapStyle('street')}
+          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] ${
+            mapStyle === 'street'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-stone-400 hover:text-white'
+          }`}
+          title="Switch to Street Map"
+        >
+          <span>🗺️ Street</span>
+        </button>
+      </div>
 
-          {/* Official College Pin */}
-          <AdvancedMarker
-            position={{ lat: collegeLat, lng: collegeLng }}
-            title={`${collegeName} — Official Attendance Center`}
-          >
-            <div className="flex flex-col items-center group cursor-pointer animate-bounce-subtle">
-              <div className="bg-stone-900 text-amber-400 p-2 rounded-2xl shadow-xl border-2 border-amber-400 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-amber-400" />
-              </div>
-              <div className="bg-stone-900/90 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md mt-1 shadow-md border border-stone-700 whitespace-nowrap">
-                TSDC Center
-              </div>
-            </div>
-          </AdvancedMarker>
+      {/* Bottom Right: Map Zoom & Recenter Controls */}
+      <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={handleZoomIn}
+          className="w-7 h-7 bg-stone-900/90 hover:bg-black text-white rounded-lg border border-stone-700 flex items-center justify-center text-sm font-bold shadow-md cursor-pointer transition-colors"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={handleZoomOut}
+          className="w-7 h-7 bg-stone-900/90 hover:bg-black text-white rounded-lg border border-stone-700 flex items-center justify-center text-sm font-bold shadow-md cursor-pointer transition-colors"
+          title="Zoom Out"
+        >
+          -
+        </button>
+        <button
+          type="button"
+          onClick={studentLat && studentLng ? handleRecenterStudent : handleRecenterCollege}
+          className="w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-lg border border-blue-500 flex items-center justify-center text-xs shadow-md cursor-pointer transition-colors"
+          title={studentLat && studentLng ? 'Center on My GPS Location' : 'Center on College'}
+        >
+          <Crosshair className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
-          {/* Student Live GPS Marker - PROMINENT GLOWING BLUE DOT */}
-          {studentLat && studentLng && (
-            <AdvancedMarker
-              position={{ lat: studentLat, lng: studentLng }}
-              title="Your Live GPS Position (Blue Dot)"
-            >
-              <div className="flex flex-col items-center">
-                {/* Glowing Blue Dot Marker */}
-                <div className="relative flex items-center justify-center">
-                  <span className="animate-ping absolute inline-flex h-9 w-9 rounded-full bg-blue-500 opacity-75"></span>
-                  <div className="relative w-6 h-6 rounded-full bg-blue-600 border-2 border-white shadow-2xl ring-4 ring-blue-400/50 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white shadow-inner"></div>
-                  </div>
-                </div>
-                
-                {/* Live Blue Dot Tag */}
-                <div className="bg-blue-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full mt-1.5 shadow-md border border-blue-300 flex items-center gap-1 whitespace-nowrap tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                  <span>🔵 YOU (Device Position)</span>
-                </div>
-              </div>
-            </AdvancedMarker>
-          )}
-        </Map>
-      ) : (
-        /* Rich Interactive Vector Fallback Map showing College Pin & Blue Dot */
-        <div className="relative w-full h-full bg-slate-900 text-white flex flex-col items-center justify-center p-4 overflow-hidden">
-          {/* Grid lines background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
-
-          {/* College Center Node */}
-          <div className="relative z-10 flex flex-col items-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500 text-stone-950 flex items-center justify-center shadow-lg border-2 border-amber-300">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <span className="text-xs font-bold text-amber-200 mt-1 bg-stone-900/90 px-2.5 py-0.5 rounded-md border border-stone-700">
-              {collegeName} Center
-            </span>
-          </div>
-
-          {/* Student Blue Dot Node if active */}
-          {studentLat && studentLng && (
-            <div className="relative z-10 flex flex-col items-center animate-in fade-in">
-              <div className="relative flex items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-10 w-10 rounded-full bg-blue-500 opacity-75"></span>
-                <div className="relative w-7 h-7 rounded-full bg-blue-600 border-2 border-white shadow-2xl ring-4 ring-blue-400/60 flex items-center justify-center">
-                  <div className="w-3 h-3 rounded-full bg-white shadow-inner"></div>
-                </div>
-              </div>
-              <div className="bg-blue-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full mt-2 shadow-lg border border-blue-300 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                <span>🔵 YOU (Device Live GPS Position)</span>
-              </div>
-              <div className="text-[10px] text-blue-200 font-mono mt-1 bg-slate-800/90 px-2 py-0.5 rounded border border-blue-900/50">
-                Lat: {studentLat.toFixed(5)} | Lng: {studentLng.toFixed(5)}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Floating Map Info Overlay */}
-      <div className="absolute bottom-3 left-3 z-10 bg-stone-900/90 text-stone-100 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-lg border border-stone-700 text-[11px] font-medium flex items-center gap-2">
+      {/* Bottom Left: Floating Metric Chip */}
+      <div className="absolute bottom-3 left-3 z-10 bg-stone-950/90 text-stone-100 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg border border-stone-800 text-[11px] font-medium flex items-center gap-2 pointer-events-none">
         <span
           className={`w-2.5 h-2.5 rounded-full ${
-            isInside ? 'bg-emerald-400' : isInside === false ? 'bg-rose-400' : 'bg-amber-400'
+            isInside === true
+              ? 'bg-emerald-400'
+              : isInside === false
+              ? 'bg-rose-400'
+              : 'bg-amber-400'
           }`}
         ></span>
         <span>
@@ -276,36 +359,6 @@ export const GoogleLocationMap: React.FC<GoogleLocationMapProps> = ({
           </>
         )}
       </div>
-
-      {/* Blue Dot Legend Indicator */}
-      <div className="absolute top-3 left-3 z-10 bg-blue-900/90 text-blue-100 backdrop-blur-md px-3 py-1 rounded-xl shadow-md border border-blue-700 text-[10px] font-extrabold flex items-center gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-ping"></span>
-        <span>🔵 Live Device Blue Dot</span>
-      </div>
-
-      {/* Map Style Toggle */}
-      {apiKey && (
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-stone-900/90 backdrop-blur-md p-1 rounded-xl shadow-md border border-stone-700 text-[10px] font-bold text-stone-300">
-          <button
-            type="button"
-            onClick={() => setMapType('roadmap')}
-            className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              mapType === 'roadmap' ? 'bg-blue-600 text-white' : 'text-stone-400 hover:text-white'
-            }`}
-          >
-            Map
-          </button>
-          <button
-            type="button"
-            onClick={() => setMapType('hybrid')}
-            className={`px-2 py-1 rounded-lg transition-colors cursor-pointer ${
-              mapType === 'hybrid' ? 'bg-blue-600 text-white' : 'text-stone-400 hover:text-white'
-            }`}
-          >
-            Satellite
-          </button>
-        </div>
-      )}
     </div>
   );
 };

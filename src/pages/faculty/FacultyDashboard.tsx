@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ApiService } from '../../services/api.js';
 import { FacultyStudentDetailModal } from './FacultyStudentDetailModal.js';
 import { GeofenceVisualizer } from '../../components/common/GeofenceVisualizer.js';
+import { GoogleLocationMap } from '../../components/common/GoogleLocationMap.js';
+import { ManualAttendanceModal } from './ManualAttendanceModal.js';
+import { SubjectClassManager } from './SubjectClassManager.js';
+import { StudentManager } from './StudentManager.js';
+import { AttendanceReportView } from './AttendanceReportView.js';
+import { FacultyAuditLogsView } from './FacultyAuditLogsView.js';
 import {
   ShieldCheck,
   Play,
@@ -33,6 +39,9 @@ import {
   GraduationCap,
   Radio,
   Navigation,
+  Lock,
+  Unlock,
+  ShieldAlert,
 } from 'lucide-react';
 
 export const FacultyDashboard: React.FC = () => {
@@ -42,8 +51,15 @@ export const FacultyDashboard: React.FC = () => {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('');
 
-  // Tab within Faculty Console: 'timetable' | 'classrooms' | 'roster' | 'history'
-  const [activeTab, setActiveTab] = useState<'timetable' | 'classrooms' | 'roster' | 'history'>('timetable');
+  // Tab within Faculty Console
+  const [activeTab, setActiveTab] = useState<
+    'timetable' | 'structure' | 'students' | 'history' | 'reports' | 'classrooms' | 'roster' | 'audit'
+  >('timetable');
+  const [structureSubTab, setStructureSubTab] = useState<'subjects' | 'classes'>('subjects');
+
+  // Manual Attendance Sheet Modal
+  const [showManualSheetModal, setShowManualSheetModal] = useState<boolean>(false);
+  const [manualSheetSessionId, setManualSheetSessionId] = useState<string | null>(null);
 
   // Classrooms
   const [classrooms, setClassrooms] = useState<any[]>([]);
@@ -66,6 +82,7 @@ export const FacultyDashboard: React.FC = () => {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [liveSessionData, setLiveSessionData] = useState<any | null>(null);
   const [showRadarModal, setShowRadarModal] = useState<boolean>(false);
+  const [radarViewMode, setRadarViewMode] = useState<'radar' | 'google_map'>('google_map');
 
   // Manual Override in Progress
   const [overridingStudentId, setOverridingStudentId] = useState<string | null>(null);
@@ -76,6 +93,9 @@ export const FacultyDashboard: React.FC = () => {
   // Create Session Modal State
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [lectureTopic, setLectureTopic] = useState<string>('');
+  const [lectureNumber, setLectureNumber] = useState<string>('1');
+  const [sessionDate, setSessionDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [startTime, setStartTime] = useState<string>('09:00 AM');
   const [radiusMeters, setRadiusMeters] = useState<number>(10);
   const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -302,6 +322,9 @@ export const FacultyDashboard: React.FC = () => {
       classId: selectedClassId,
       subjectId: selectedSubjectId,
       lectureTopic: lectureTopic.trim(),
+      lectureNumber: lectureNumber ? Number(lectureNumber) : undefined,
+      sessionDate: sessionDate || undefined,
+      startTime: startTime || undefined,
       radiusMeters: Number(radiusMeters),
       latitude: lat,
       longitude: lng,
@@ -317,6 +340,17 @@ export const FacultyDashboard: React.FC = () => {
       fetchLectures();
     } else {
       setCreateError(res.message || 'Failed to start attendance session.');
+    }
+  };
+
+  const handleToggleSessionLock = async (sessionId: string, currentLock: boolean) => {
+    try {
+      const res = await ApiService.toggleSessionLock(sessionId, !currentLock);
+      if (res.success) {
+        fetchLectures();
+      }
+    } catch (e) {
+      console.error('Session lock toggle failed:', e);
     }
   };
 
@@ -441,20 +475,58 @@ export const FacultyDashboard: React.FC = () => {
                 {liveSessionData.session.className} — {liveSessionData.session.subjectName}
               </h2>
               <p className="text-xs text-stone-400 mt-1">
-                Teacher Anchor: <strong>{liveSessionData.session.centerLatitude?.toFixed(6) || '19.213805'}, {liveSessionData.session.centerLongitude?.toFixed(6) || '72.864869'}</strong> • Allowed Radius: <strong>{liveSessionData.session.radiusMeters}m</strong>
+                Teacher Anchor: <strong>{liveSessionData.session.centerLatitude?.toFixed(6) || '19.213805'}, {liveSessionData.session.centerLongitude?.toFixed(6) || '72.864810'}</strong> • Allowed Radius: <strong>{liveSessionData.session.radiusMeters}m</strong>
               </p>
             </div>
 
-            {/* Main Radar View */}
+            {/* Map Mode Toggle */}
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setRadarViewMode('google_map')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  radarViewMode === 'google_map'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                }`}
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                <span>Google Satellite Map</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRadarViewMode('radar')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  radarViewMode === 'radar'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                }`}
+              >
+                <Radio className="w-3.5 h-3.5" />
+                <span>Radar HUD</span>
+              </button>
+            </div>
+
+            {/* Main Map or Radar View */}
             <div className="flex justify-center">
-              <GeofenceVisualizer
-                teacherLat={liveSessionData.session.centerLatitude || 19.213805}
-                teacherLng={liveSessionData.session.centerLongitude || 72.864869}
-                radiusMeters={liveSessionData.session.radiusMeters}
-                teacherName="Teacher's Live Mobile Beacon"
-                studentLabel="Students Area"
-                className="w-full max-w-lg border-stone-700 bg-stone-950"
-              />
+              {radarViewMode === 'google_map' ? (
+                <GoogleLocationMap
+                  collegeLat={liveSessionData.session.centerLatitude || 19.213805}
+                  collegeLng={liveSessionData.session.centerLongitude || 72.864810}
+                  collegeName={liveSessionData.session.className || 'TSDC Kandivali (East)'}
+                  radiusMeters={liveSessionData.session.radiusMeters}
+                  className="w-full h-72 sm:h-80 border-stone-700"
+                />
+              ) : (
+                <GeofenceVisualizer
+                  teacherLat={liveSessionData.session.centerLatitude || 19.213805}
+                  teacherLng={liveSessionData.session.centerLongitude || 72.864810}
+                  radiusMeters={liveSessionData.session.radiusMeters}
+                  teacherName="Teacher's Live Mobile Beacon"
+                  studentLabel="Students Area"
+                  className="w-full max-w-lg border-stone-700 bg-stone-950"
+                />
+              )}
             </div>
 
             {/* Attendance Progress Counter */}
@@ -495,14 +567,17 @@ export const FacultyDashboard: React.FC = () => {
             <div className="bg-stone-900 text-white px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <Play className="w-5 h-5 text-emerald-400 fill-emerald-400" />
-                <h3 className="text-sm font-bold tracking-tight">Start Attendance Session</h3>
+                <div>
+                  <h3 className="text-sm font-bold tracking-tight">Launch Lecture Attendance Session</h3>
+                  <p className="text-[11px] text-stone-400">Step 4 in attendance lifecycle</p>
+                </div>
               </div>
-              <button onClick={() => setShowCreateModal(false)} className="text-stone-400 hover:text-white cursor-pointer">
+              <button onClick={() => setShowCreateModal(false)} className="text-stone-400 hover:text-white cursor-pointer text-lg font-bold">
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleStartSession} className="p-6 space-y-4">
+            <form onSubmit={handleStartSession} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               {createError && (
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
@@ -510,61 +585,112 @@ export const FacultyDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* Class */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Target Assigned Class</label>
-                <select
-                  value={selectedClassId}
-                  onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-hidden focus:border-stone-900"
-                >
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.class_name}.{c.division} — {c.course_name}
-                    </option>
-                  ))}
-                </select>
+              {/* 1. Target Class & Subject */}
+              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-3">
+                <div className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-stone-900 text-white inline-flex items-center justify-center text-[10px]">1</span>
+                  <span>Select Class & Subject</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">Target Assigned Class</label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => setSelectedClassId(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-hidden focus:border-stone-900"
+                  >
+                    {classes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.class_name}.{c.division} — {c.course_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">Assigned Subject</label>
+                  <select
+                    value={selectedSubjectId}
+                    onChange={(e) => setSelectedSubjectId(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-hidden focus:border-stone-900"
+                  >
+                    {subjects.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.subject_name} ({s.subject_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Subject */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Assigned Subject</label>
-                <select
-                  value={selectedSubjectId}
-                  onChange={(e) => setSelectedSubjectId(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900 focus:outline-hidden focus:border-stone-900"
-                >
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.subject_name} ({s.subject_code})
-                    </option>
-                  ))}
-                </select>
+              {/* 2. Lecture Details */}
+              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-3">
+                <div className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-stone-900 text-white inline-flex items-center justify-center text-[10px]">2</span>
+                  <span>Lecture Topic & Number</span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    What was taught today? (Lecture Topic) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={lectureTopic}
+                    onChange={(e) => setLectureTopic(e.target.value)}
+                    placeholder="e.g. Heuristic Search Algorithms & A* Pathfinding"
+                    className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-hidden focus:border-stone-900"
+                  />
+                </div>
+
+                {/* Lecture Number, Date, Time Row */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">Lecture #</label>
+                    <input
+                      type="text"
+                      placeholder="1"
+                      value={lectureNumber}
+                      onChange={(e) => setLectureNumber(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-mono font-semibold text-stone-900 focus:outline-hidden focus:border-stone-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={sessionDate}
+                      onChange={(e) => setSessionDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-900 focus:outline-hidden focus:border-stone-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">Time</label>
+                    <input
+                      type="text"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      placeholder="09:00 AM"
+                      className="w-full px-3 py-2 bg-white border border-stone-200 rounded-xl text-xs font-medium text-stone-900 focus:outline-hidden focus:border-stone-900"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Lecture Topic */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  What was taught today? (Lecture Topic)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={lectureTopic}
-                  onChange={(e) => setLectureTopic(e.target.value)}
-                  placeholder="e.g. Heuristic Search Algorithms & A* Pathfinding"
-                  className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:outline-hidden focus:border-stone-900"
-                />
-              </div>
+              {/* 3. Verification Radius */}
+              <div className="bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2">
+                <div className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-stone-900 text-white inline-flex items-center justify-center text-[10px]">3</span>
+                  <span>Geofence Radius & Verification</span>
+                </div>
 
-              {/* Attendance Radius Selector */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
+                <div className="flex justify-between items-center mb-1">
                   <label className="text-xs font-semibold text-stone-700">
-                    Attendance Geolocation Radius
+                    Attendance Radius Limit
                   </label>
                   <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    {radiusMeters} meters
+                    {radiusMeters} meters from your mobile
                   </span>
                 </div>
                 
@@ -579,7 +705,8 @@ export const FacultyDashboard: React.FC = () => {
                 />
 
                 {/* Radius Presets */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-stone-400 font-semibold mr-1">Presets:</span>
                   {[2, 5, 10, 15, 20, 30, 50].map((preset) => (
                     <button
                       key={preset}
@@ -588,31 +715,50 @@ export const FacultyDashboard: React.FC = () => {
                       className={`px-2 py-0.5 text-[10px] font-semibold rounded border transition-colors cursor-pointer ${
                         radiusMeters === preset
                           ? 'bg-stone-900 text-white border-stone-900'
-                          : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                          : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-100'
                       }`}
                     >
                       {preset}m
                     </button>
                   ))}
                 </div>
+
+                <p className="text-[11px] text-stone-500 pt-1">
+                  💡 Students inside this distance will self-mark attendance with live face camera verification.
+                </p>
               </div>
 
-              <div className="pt-3 flex justify-end gap-2">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-stone-100">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 rounded-xl cursor-pointer"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setManualSheetSessionId(null);
+                    setShowManualSheetModal(true);
+                  }}
+                  className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer"
                 >
-                  Cancel
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Switch to Manual Roll-Call Sheet</span>
                 </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingSession}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <Play className="w-3.5 h-3.5 fill-white" />
-                  <span>{isCreatingSession ? 'Starting...' : 'Start Attendance Window'}</span>
-                </button>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingSession}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>{isCreatingSession ? 'Starting...' : 'Start Smart Attendance'}</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -639,7 +785,7 @@ export const FacultyDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {activeSessionId && (
             <button
               onClick={() => setShowRadarModal(true)}
@@ -651,11 +797,147 @@ export const FacultyDashboard: React.FC = () => {
           )}
 
           <button
+            onClick={() => {
+              setManualSheetSessionId(null);
+              setShowManualSheetModal(true);
+            }}
+            className="px-3.5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Manual Roll-Call</span>
+          </button>
+
+          <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2.5 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" />
-            <span>Start Attendance Window</span>
+            <span>Start Smart Window</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Interactive Attendance Lifecycle Flow Stepper */}
+      <div className="bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-2xl p-4 sm:p-5 shadow-xs border border-stone-800 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
+              FLOW
+            </div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-200">
+              Attendance Management Lifecycle
+            </h3>
+          </div>
+          <span className="text-[11px] text-stone-400">
+            Click any stage below to jump directly to management or launch attendance
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <button
+            onClick={() => {
+              setStructureSubTab('classes');
+              setActiveTab('structure');
+            }}
+            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+              activeTab === 'structure' && structureSubTab === 'classes'
+                ? 'bg-emerald-500/20 border-emerald-400 text-white'
+                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
+            }`}
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 1</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
+              <School className="w-3 h-3 text-stone-400" />
+              <span>Classes & Divs</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Create & manage</div>
+          </button>
+
+          <button
+            onClick={() => {
+              setStructureSubTab('subjects');
+              setActiveTab('structure');
+            }}
+            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+              activeTab === 'structure' && structureSubTab === 'subjects'
+                ? 'bg-emerald-500/20 border-emerald-400 text-white'
+                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
+            }`}
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 2</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
+              <BookOpen className="w-3 h-3 text-indigo-400" />
+              <span>Subjects</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Catalog & codes</div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('students')}
+            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+              activeTab === 'students'
+                ? 'bg-emerald-500/20 border-emerald-400 text-white'
+                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
+            }`}
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 3</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
+              <GraduationCap className="w-3 h-3 text-emerald-400" />
+              <span>Students</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Enroll & assign</div>
+          </button>
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="p-2.5 rounded-xl border bg-stone-800/80 border-stone-700/60 text-stone-300 hover:border-emerald-400 hover:bg-emerald-950/40 text-left transition-all cursor-pointer group"
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 4</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5 text-white group-hover:text-emerald-300">
+              <Play className="w-3 h-3 fill-emerald-400 text-emerald-400" />
+              <span>Start Lecture</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Select Sub + Class + #</div>
+          </button>
+
+          <button
+            onClick={() => {
+              if (activeSessionId) {
+                setShowRadarModal(true);
+              } else {
+                setActiveTab('timetable');
+              }
+            }}
+            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+              activeSessionId
+                ? 'bg-emerald-600/30 border-emerald-400 text-white animate-pulse'
+                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
+            }`}
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 5</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
+              <Radio className="w-3 h-3 text-emerald-400" />
+              <span>Live Radar</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">
+              {activeSessionId ? 'Session in progress' : 'Geofence radius'}
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+              activeTab === 'reports' || activeTab === 'history'
+                ? 'bg-emerald-500/20 border-emerald-400 text-white'
+                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
+            }`}
+          >
+            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 6</div>
+            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
+              <FileSpreadsheet className="w-3 h-3 text-amber-400" />
+              <span>Reports & Lock</span>
+            </div>
+            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Filter & lock records</div>
           </button>
         </div>
       </div>
@@ -700,53 +982,104 @@ export const FacultyDashboard: React.FC = () => {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-stone-200 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-1.5 border-b border-stone-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('timetable')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'timetable'
               ? 'bg-stone-900 text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
           }`}
         >
           <Calendar className="w-3.5 h-3.5 text-amber-400" />
-          <span>Today & Weekly Timetable</span>
+          <span>Timetable & Schedule</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setStructureSubTab('classes');
+            setActiveTab('structure');
+          }}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'structure'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5 text-indigo-500" />
+          <span>Classes & Subjects</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('students')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'students'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <GraduationCap className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Student Directory</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'history'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+          <span>Lecture History & Lock ({lectureHistory.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('reports')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'reports'
+              ? 'bg-stone-900 text-white shadow-xs'
+              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
+          }`}
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Reports & Defaulters</span>
         </button>
 
         <button
           onClick={() => setActiveTab('classrooms')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'classrooms'
               ? 'bg-stone-900 text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
           }`}
         >
           <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Classrooms & Join Codes ({classrooms.length})</span>
+          <span>Classroom Join Codes ({classrooms.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('roster')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
             activeTab === 'roster'
               ? 'bg-stone-900 text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
           }`}
         >
           <Users className="w-3.5 h-3.5 text-stone-400" />
-          <span>Student Roster & Defaulters ({students.length})</span>
+          <span>Class Compliance ({students.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('history')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'history'
+          onClick={() => setActiveTab('audit')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'audit'
               ? 'bg-stone-900 text-white shadow-xs'
               : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5 text-stone-400" />
-          <span>Curriculum Topics Log ({lectureHistory.length})</span>
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+          <span>Audit Trail</span>
         </button>
       </div>
 
@@ -774,13 +1107,24 @@ export const FacultyDashboard: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setShowRadarModal(true)}
                 className="px-3 py-2 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 <span>Sonar Radar HUD</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setManualSheetSessionId(liveSessionData.session.id);
+                  setShowManualSheetModal(true);
+                }}
+                className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer border border-stone-300"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Manual Roll-Call Sheet</span>
               </button>
 
               <button
@@ -810,7 +1154,7 @@ export const FacultyDashboard: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Anchor Lng:</span>
-                  <span className="font-bold">{liveSessionData.session.centerLongitude?.toFixed(6) || '72.864869'}</span>
+                  <span className="font-bold">{liveSessionData.session.centerLongitude?.toFixed(6) || '72.864810'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Allowed Perimeter:</span>
@@ -1443,57 +1787,182 @@ export const FacultyDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: LECTURE TOPICS LOG */}
+      {/* TAB 4: LECTURE HISTORY & ATTENDANCE LOCK */}
       {activeTab === 'history' && (
         <div className="bg-white rounded-2xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-          <div>
-            <h2 className="text-base font-bold text-stone-900 tracking-tight">
-              Lecture Topics Log & Curriculum Progress
-            </h2>
-            <p className="text-xs text-stone-500">
-              Historical records of topics taught during previous lecture sessions for your assigned subjects.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                <h2 className="text-base font-bold text-stone-900 tracking-tight">
+                  Lecture History & Attendance Session Lock
+                </h2>
+              </div>
+              <p className="text-xs text-stone-500">
+                Permanent records linked to Student + Subject + Class + Lecture # + Date. Completed sessions can be locked to prevent accidental changes.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setManualSheetSessionId(null);
+                setShowManualSheetModal(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Record Manual Session</span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-stone-50 text-stone-600 uppercase font-semibold text-[10px] tracking-wider border-b border-stone-200">
+                  <th className="py-2.5 px-3">Lec #</th>
                   <th className="py-2.5 px-3">Date & Time</th>
                   <th className="py-2.5 px-3">Class</th>
                   <th className="py-2.5 px-3">Subject</th>
                   <th className="py-2.5 px-3">Topic Taught</th>
-                  <th className="py-2.5 px-3">Attendance Ratio</th>
-                  <th className="py-2.5 px-3 text-right">Status</th>
+                  <th className="py-2.5 px-3">Turnout</th>
+                  <th className="py-2.5 px-3">Lock Status</th>
+                  <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {lectureHistory.map((lec) => (
-                  <tr key={lec.id} className="hover:bg-stone-50/70 transition-colors">
-                    <td className="py-2.5 px-3 font-mono whitespace-nowrap">
-                      <div className="font-semibold text-stone-900">{lec.date}</div>
-                      <div className="text-[10px] text-stone-500">{lec.time}</div>
-                    </td>
-                    <td className="py-2.5 px-3 font-semibold text-stone-800">{lec.className}</td>
-                    <td className="py-2.5 px-3">
-                      <div className="font-semibold text-stone-900">{lec.subjectName}</div>
-                      <div className="text-[10px] text-stone-500 font-mono">{lec.subjectCode}</div>
-                    </td>
-                    <td className="py-2.5 px-3 font-medium text-stone-800 max-w-sm">{lec.topic}</td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-stone-800">
-                      {lec.presentCount} / {lec.totalEnrolled}
-                    </td>
-                    <td className="py-2.5 px-3 text-right">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${lec.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-700'}`}>
-                        {lec.status}
-                      </span>
+                {lectureHistory.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-stone-400 font-medium">
+                      No attendance sessions recorded yet. Start a session or use &quot;Record Manual Session&quot;.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  lectureHistory.map((lec) => (
+                    <tr key={lec.id} className="hover:bg-stone-50/70 transition-colors">
+                      <td className="py-2.5 px-3 font-mono font-bold text-stone-900">
+                        {lec.lectureNumber ? (
+                          <span className="px-2 py-0.5 bg-stone-100 text-stone-800 rounded font-semibold">
+                            #{lec.lectureNumber}
+                          </span>
+                        ) : (
+                          <span className="text-stone-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono whitespace-nowrap">
+                        <div className="font-semibold text-stone-900">{lec.date}</div>
+                        <div className="text-[10px] text-stone-500">{lec.time}</div>
+                      </td>
+                      <td className="py-2.5 px-3 font-semibold text-stone-800">{lec.className}</td>
+                      <td className="py-2.5 px-3">
+                        <div className="font-semibold text-stone-900">{lec.subjectName}</div>
+                        <div className="text-[10px] text-stone-500 font-mono">{lec.subjectCode}</div>
+                      </td>
+                      <td className="py-2.5 px-3 font-medium text-stone-800 max-w-xs truncate" title={lec.topic}>
+                        {lec.topic}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-stone-800">
+                        <span className={lec.presentCount > 0 ? 'text-emerald-700' : 'text-stone-500'}>
+                          {lec.presentCount}
+                        </span>
+                        <span className="text-stone-400 font-normal"> / {lec.totalEnrolled}</span>
+                      </td>
+                      <td className="py-2.5 px-3">
+                        <button
+                          onClick={() => handleToggleSessionLock(lec.id, Boolean(lec.isLocked))}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                            lec.isLocked
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                              : 'bg-stone-100 text-stone-600 hover:bg-stone-200 border border-stone-200'
+                          }`}
+                          title={lec.isLocked ? 'Click to unlock session for changes' : 'Click to lock session to prevent accidental changes'}
+                        >
+                          {lec.isLocked ? (
+                            <>
+                              <Lock className="w-3 h-3 text-rose-600" />
+                              <span>Locked</span>
+                            </>
+                          ) : (
+                            <>
+                              <Unlock className="w-3 h-3 text-stone-400" />
+                              <span>Unlocked</span>
+                            </>
+                          )}
+                        </button>
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <button
+                          onClick={() => {
+                            setManualSheetSessionId(lec.id);
+                            setShowManualSheetModal(true);
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold rounded-lg text-xs transition-colors cursor-pointer"
+                          title="Open full attendance roll-call sheet"
+                        >
+                          <FileSpreadsheet className="w-3 h-3 text-indigo-600" />
+                          <span>Sheet</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
+      )}
+
+      {/* TAB: SUBJECTS & CLASSES MANAGEMENT */}
+      {activeTab === 'structure' && (
+        <SubjectClassManager
+          initialTab={structureSubTab}
+          onRefreshParent={() => {
+            fetchInitialData();
+            if (selectedClassId) fetchClassDetails(selectedClassId);
+          }}
+        />
+      )}
+
+      {/* TAB: STUDENT DIRECTORY & ENROLLMENT */}
+      {activeTab === 'students' && (
+        <StudentManager
+          onSelectStudent={(studentId) => setSelectedStudentForModal(studentId)}
+        />
+      )}
+
+      {/* TAB: COMPREHENSIVE ATTENDANCE REPORTS & DEFAULTERS */}
+      {activeTab === 'reports' && (
+        <AttendanceReportView
+          onOpenSessionSheet={(sessionId) => {
+            setManualSheetSessionId(sessionId);
+            setShowManualSheetModal(true);
+          }}
+          onOpenStudentDetail={(studentId) => setSelectedStudentForModal(studentId)}
+        />
+      )}
+
+      {/* TAB: FORENSIC AUDIT TRAIL */}
+      {activeTab === 'audit' && (
+        <FacultyAuditLogsView />
+      )}
+
+      {/* Manual Roll-Call & Sheet Editor Modal */}
+      {showManualSheetModal && (
+        <ManualAttendanceModal
+          existingSessionId={manualSheetSessionId}
+          initialClassId={selectedClassId}
+          initialSubjectId={selectedSubjectId}
+          onClose={() => {
+            setShowManualSheetModal(false);
+            setManualSheetSessionId(null);
+          }}
+          onSuccess={() => {
+            setShowManualSheetModal(false);
+            setManualSheetSessionId(null);
+            fetchInitialData();
+            fetchLectures();
+            if (selectedClassId) fetchClassDetails(selectedClassId);
+          }}
+        />
       )}
     </div>
   );
