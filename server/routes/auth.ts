@@ -294,7 +294,7 @@ router.post('/request-reset-otp', async (req: Request, res: Response) => {
     };
     db.createOtp(otpRecord);
 
-    const emailResult = await sendOtpEmail(user.email, otp, user.name);
+    const emailResult = await sendOtpEmail(user.email, otp, user.name, 'password_reset');
 
     res.json({
       success: true,
