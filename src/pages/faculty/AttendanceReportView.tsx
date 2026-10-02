@@ -146,12 +146,11 @@ export const AttendanceReportView: React.FC<AttendanceReportViewProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <Printer className="w-3.5 h-3.5 text-stone-500" />
               <span>Print</span>
             </button>
-
             <button
               onClick={handleExportCSV}
               disabled={!reportData || reportData?.students?.length === 0}

@@ -38,17 +38,20 @@ router.post('/register', async (req: Request, res: Response) => {
       adminPasscode,
     } = req.body;
 
-    if (!name || !email || !password || !confirmPassword) {
+    const cleanPassword = password.trim();
+    const cleanConfirm = confirmPassword.trim();
+
+    if (!name || !email || !cleanPassword || !cleanConfirm) {
       res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (cleanPassword !== cleanConfirm) {
       res.status(400).json({ success: false, message: 'Passwords do not match.' });
       return;
     }
 
-    if (password.length < 6) {
+    if (cleanPassword.length < 6) {
       res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
       return;
     }
@@ -96,7 +99,7 @@ router.post('/register', async (req: Request, res: Response) => {
       return;
     }
 
-    const password_hash = bcrypt.hashSync(password, 10);
+    const password_hash = bcrypt.hashSync(cleanPassword, 10);
     const userId = existingUser ? existingUser.id : `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const userObj: User = existingUser
@@ -321,12 +324,14 @@ router.post('/reset-password', (req: Request, res: Response) => {
       return;
     }
 
+    const cleanNewPassword = newPassword.trim();
+
     if (!otp || otp.trim().length !== 6) {
       res.status(400).json({ success: false, message: '6-digit OTP verification code from Gmail is required to reset password.' });
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (cleanNewPassword.length < 6) {
       res.status(400).json({ success: false, message: 'New password must be at least 6 characters long.' });
       return;
     }
@@ -385,7 +390,7 @@ router.post('/reset-password', (req: Request, res: Response) => {
 
     db.markOtpVerified(otpRecord.id);
 
-    const password_hash = bcrypt.hashSync(newPassword, 10);
+    const password_hash = bcrypt.hashSync(cleanNewPassword, 10);
     db.updateUser(user.id, {
       ...user,
       password_hash,
@@ -676,8 +681,19 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     const emailClean = user.email.toLowerCase();
+    const cleanPassword = password.trim();
 
-    const isMatch = bcrypt.compareSync(password, user.password_hash) || password === 'Password@123' || password === 'Admin@123' || password === 'Student@2026';
+    console.log(`[LOGIN DEBUG] Checking credentials for ${user.email} (${user.role})`);
+    console.log(`[LOGIN DEBUG] Input Password Length: ${cleanPassword.length}`);
+    console.log(`[LOGIN DEBUG] Hash in DB starts with: ${user.password_hash.substring(0, 10)}`);
+
+    const isMatch = bcrypt.compareSync(cleanPassword, user.password_hash) || 
+                    cleanPassword === 'Password@123' || 
+                    cleanPassword === 'Admin@123' || 
+                    cleanPassword === 'Student@2026';
+
+    console.log(`[LOGIN DEBUG] Comparison Match Result: ${isMatch}`);
+
     if (!isMatch) {
       res.status(401).json({
         success: false,

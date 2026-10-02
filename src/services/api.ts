@@ -70,7 +70,7 @@ export class ApiService {
         let fallbackMessage = 'An unexpected response was received from the server.';
         if (response.status === 403) {
           if (endpoint.includes('/auth/')) {
-            fallbackMessage = 'Authentication failed. Please check your credentials and try again.';
+            fallbackMessage = 'Authentication failed. If you are using an Incognito/Private Window, please switch to a normal browser window or allow Third-Party Cookies to log in successfully.';
           } else {
             fallbackMessage = 'Access Denied: You do not have permission for this action. Please log in with the appropriate account.';
           }
