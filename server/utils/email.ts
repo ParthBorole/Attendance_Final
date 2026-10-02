@@ -260,148 +260,66 @@ export async function sendOtpEmail(
       ? "Reset Your AttendSecure Password"
       : "Verify Your AttendSecure Account";
 
-  const originalConsoleError = console.error;
-  // Intercept and redirect Resend internal library logs to standard console.log
-  // so automated environment log scanners do not trigger false-positive warnings
-  console.error = (...args) => {
-    const isResendErr = args.some(arg => 
-      typeof arg === 'string' && arg.includes('[Resend API Error]')
-    );
-    if (isResendErr) {
-      // Completely swallow blacklisted keywords to satisfy automated platform detectors
-      console.log("[INFO] Resend API sandbox message intercepted and handled gracefully.");
-    } else {
-      originalConsoleError(...args);
-    }
-  };
-
   try {
-    try {
-      // Send directly to the email entered by the user.
-      let result = await resend.emails.send({
-        from: fromAddress,
-        to: [email],
-        subject,
-        html,
-      });
+    // Send directly to the email entered by the user.
+    const result = await resend.emails.send({
+      from: fromAddress,
+      to: [email],
+      subject,
+      html,
+    });
 
-      if (result.error) {
-        const errMsg = result.error.message || "";
-        const isSandboxError =
-          errMsg.toLowerCase().includes("only send testing emails") ||
-          errMsg.toLowerCase().includes("smartattendance13@gmail.com") ||
-          result.error.name === "validation_error" ||
-          email !== "smartattendance13@gmail.com";
-
-        if (isSandboxError) {
-          const fallbackRecipient = "smartattendance13@gmail.com";
-          console.log(
-            `[RESEND SANDBOX REDIRECT] Redirecting OTP for ${email} to Resend Owner (${fallbackRecipient}) because of trial limits.`
-          );
-
-          const warningBanner = `
-            <div style="background-color: #FEF3C7; border: 1px solid #F59E0B; padding: 16px; margin-bottom: 20px; border-radius: 8px; font-family: sans-serif; color: #92400E; font-size: 14px; line-height: 1.5;">
-              <strong>Resend Sandbox Notification:</strong><br />
-              Because your Resend account is in Sandbox/Trial mode, this verification OTP requested for student/user <strong>${email}</strong> has been forwarded to the registered owner inbox (<code>${fallbackRecipient}</code>).
-            </div>
-          `;
-
-          const fallbackResult = await resend.emails.send({
-            from: fromAddress,
-            to: [fallbackRecipient],
-            subject: `[FORWARDED OTP for ${email}] ${subject}`,
-            html: warningBanner + html,
-          });
-
-          if (!fallbackResult.error) {
-            console.log(`[RESEND SANDBOX SUCCESS] Successfully forwarded OTP to ${fallbackRecipient} for target: ${email}`);
-            
-            const logEntry: SentEmailLog = {
-              id: "email_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
-              to: email,
-              subject,
-              otp,
-              sentAt: new Date().toISOString(),
-              html,
-              deliveredRealEmail: true,
-              statusMessage: `OTP forwarded to owner: ${fallbackRecipient}`,
-            };
-            sentEmailsLog.unshift(logEntry);
-            if (sentEmailsLog.length > 50) sentEmailsLog.pop();
-
-            return {
-              success: true,
-              deliveredRealEmail: true,
-              message: "OTP forwarded to registered owner inbox.",
-            };
-          } else {
-            throw new Error(fallbackResult.error.message || "Sandbox fallback delivery failed");
-          }
-        } else {
-          throw new Error(result.error.message || "Direct send failed");
-        }
-      }
-
-      console.log(`[RESEND SUCCESS] OTP email sent to ${email}`);
-
-      // Keep the existing local email log functionality.
-      const logEntry: SentEmailLog = {
-        id:
-          "email_" +
-          Date.now() +
-          "_" +
-          Math.random().toString(36).substring(2, 6),
-        to: email,
-        subject,
-        otp,
-        sentAt: new Date().toISOString(),
-        html,
-        deliveredRealEmail: true,
-        statusMessage: "OTP email sent successfully.",
-      };
-
-      sentEmailsLog.unshift(logEntry);
-
-      if (sentEmailsLog.length > 50) {
-        sentEmailsLog.pop();
-      }
+    if (result.error) {
+      console.error("[RESEND ERROR]", result.error.message);
 
       return {
-        success: true,
-        deliveredRealEmail: true,
-        message: "OTP email sent successfully.",
-      };
-    } catch (error: any) {
-      const message = error?.message || "Unknown Resend error occurred.";
-
-      console.log("[RESEND ERROR HANDLED]", message);
-
-      // Dynamic bypass logging
-      const fallbackMsg = `Bypass: OTP generated for ${email}.`;
-      console.log(`[DEVELOPER GRACEFUL BYPASS OTP] Email: ${email} -> OTP Code: ${otp}`);
-
-      const logEntry: SentEmailLog = {
-        id: "email_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
-        to: email,
-        subject,
-        otp,
-        sentAt: new Date().toISOString(),
-        html,
+        success: false,
         deliveredRealEmail: false,
-        statusMessage: fallbackMsg,
-      };
-      sentEmailsLog.unshift(logEntry);
-      if (sentEmailsLog.length > 50) sentEmailsLog.pop();
-
-      return {
-        success: true,
-        deliveredRealEmail: false,
-        message: fallbackMsg,
-        error: message,
+        message: "Failed to send OTP email.",
+        error: result.error.message,
       };
     }
-  } finally {
-    console.error = originalConsoleError;
+
+    console.log(`[RESEND SUCCESS] OTP email sent to ${email}`);
+
+    // Keep the existing local email log functionality.
+    const logEntry: SentEmailLog = {
+      id:
+        "email_" +
+        Date.now() +
+        "_" +
+        Math.random().toString(36).substring(2, 6),
+      to: email,
+      subject,
+      otp,
+      sentAt: new Date().toISOString(),
+      html,
+      deliveredRealEmail: true,
+      statusMessage: "OTP email sent successfully.",
+    };
+
+    sentEmailsLog.unshift(logEntry);
+
+    if (sentEmailsLog.length > 50) {
+      sentEmailsLog.pop();
+    }
+
+    return {
+      success: true,
+      deliveredRealEmail: true,
+      message: "OTP email sent successfully.",
+    };
+  } catch (error: any) {
+    const message = error?.message || "Unknown Resend error occurred.";
+
+    console.error("[RESEND ERROR]", message);
+
+    return {
+      success: false,
+      deliveredRealEmail: false,
+      message: "Failed to send OTP email.",
+      error: message,
+    };
   }
 }
 
