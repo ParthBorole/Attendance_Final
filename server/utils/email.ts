@@ -304,7 +304,7 @@ export async function sendOtpEmail(
 
       if (isSandboxError) {
         const fallbackRecipient = "smartattendance13@gmail.com";
-        console.warn(
+        console.log(
           `[RESEND SANDBOX REDIRECT] Redirecting OTP for ${email} to Resend Owner (${fallbackRecipient}) because of trial limits.`
         );
 
@@ -359,7 +359,7 @@ export async function sendOtpEmail(
     };
   } catch (err: any) {
     const message = err?.message || "Resend error occurred.";
-    console.error("[RESEND API FALLBACK WARNING]", message);
+    console.log("[RESEND API FALLBACK NOTICE]", message);
 
     // Fall back gracefully to save OTP inside in-memory logs so user is never blocked
     const fallbackMsg = `Offline / Bypass Mode: OTP generated and logged for ${email}.`;

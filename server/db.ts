@@ -89,12 +89,13 @@ class DatabaseManager {
         };
 
         const hasCleanName = this.db.users.some((u) => u.name === 'Tuba Ma\'am' || u.name === 'Vijay Sir');
-        const hasStudents = this.db.students && this.db.students.length > 0;
-        if (!hasCleanName || this.db.timetables.length === 0 || this.db.classrooms.length === 0 || !hasStudents) {
+        if (!hasCleanName || this.db.timetables.length === 0 || this.db.classrooms.length === 0) {
           this.seedDatabase();
         }
 
         this.isLoaded = true;
+        // Clean database immediately to ensure student accounts are fresh and ready for manual register
+        this.cleanDatabaseForProduction();
         return;
       } catch (err) {
         console.error('Failed to read database file, seeding new database:', err);
