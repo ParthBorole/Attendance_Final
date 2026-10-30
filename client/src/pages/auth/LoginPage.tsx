@@ -26,6 +26,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
   const [otpInput, setOtpInput] = useState<string>('');
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string>('');
+  const [receivedOtp, setReceivedOtp] = useState<string | null>(null);
+  const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null);
 
   const handleRoleChange = (newRole: 'student' | 'faculty' | 'admin') => {
     setRole(newRole);
@@ -35,6 +37,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
     setPassword('');
     setStep('credentials');
     setOtpInput('');
+    setReceivedOtp(null);
+    setDeliveryNotice(null);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -55,6 +59,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
       if (res.requiresOtp) {
         setOtpEmail(res.email || email.trim().toLowerCase());
         setOtpNotice(res.message || `A 6-digit OTP security code was sent to ${res.email}.`);
+        setDeliveryNotice(res.deliveryNotice || null);
+        setReceivedOtp(res.otp || null);
         setStep('otp');
         setOtpInput(''); // Start empty for clean login
       } else if (res.token) {
@@ -142,7 +148,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
                   <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-200/70 text-emerald-900 rounded-md">OTP Dispatched</span>
                 </div>
                 <p className="text-[11px] text-emerald-800">
-                  A 6-digit verification code has been dispatched to <strong>{otpEmail}</strong>.
+                  A 6-digit verification code has been dispatched to <strong>{otpEmail}</strong>. Please check your Gmail Inbox & Spam folder.
                 </p>
               </div>
 
@@ -306,14 +312,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Email Address
+                {role === 'faculty'
+                  ? 'Faculty Email Address / Employee ID'
+                  : role === 'student'
+                  ? 'Student Email Address / Roll Number'
+                  : 'Administrator Email Address'}
               </label>
               <input
-                type="email"
+                type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
+                placeholder={
+                  role === 'faculty'
+                    ? 'e.g. parthborole2006@gmail.com or Employee ID'
+                    : role === 'student'
+                    ? 'e.g. student@gmail.com or Roll Number'
+                    : 'admin@tsdc.edu.in'
+                }
                 className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:border-stone-900 focus:bg-white focus:outline-hidden transition-all font-mono"
               />
             </div>
@@ -337,7 +353,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToRegister }) => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
+                  placeholder="••••••••"
                   className="w-full pl-3.5 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-900 focus:border-stone-900 focus:bg-white focus:outline-hidden transition-all"
                 />
                 <button

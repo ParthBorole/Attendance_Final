@@ -93,9 +93,46 @@ class DatabaseManager {
           this.seedDatabase();
         }
 
+        // If no students exist, seed the demo student accounts so demo login works
+        if (!this.db.students || this.db.students.length === 0) {
+          const studentPassHash = bcrypt.hashSync('Student@2026', 10);
+          const now = new Date().toISOString();
+          
+          if (!this.db.users.some((u) => u.email === 'student@tsdc.edu.in')) {
+            this.db.users.push({
+              id: 'usr_std_01',
+              name: 'Aarav Sharma',
+              email: 'student@tsdc.edu.in',
+              password_hash: studentPassHash,
+              role: 'student',
+              status: 'active',
+              created_at: now,
+              updated_at: now,
+            });
+          }
+
+          this.db.students = [
+            { id: 'std_01', user_id: 'usr_std_01', student_id: 'TSDC-TYCS-101', roll_number: '101', class_id: 'cls_tycs_a', division: 'A', academic_year: '2026-27' },
+          ];
+
+          // Enroll in classrooms
+          const sampleClasses = ['cr_ai_tycsa', 'cr_stqa_tycsa', 'cr_eth_tycsa', 'cr_dv_tycsa', 'cr_aba_tycsa', 'cr_iks_tycsa'];
+          sampleClasses.forEach((cId, idx) => {
+            if (!this.db.classroom_members.some((cm) => cm.student_id === 'std_01' && cm.classroom_id === cId)) {
+              this.db.classroom_members.push({
+                id: `cm_std01_${idx}`,
+                classroom_id: cId,
+                student_id: 'std_01',
+                joined_at: now,
+                status: 'active',
+                created_at: now,
+              });
+            }
+          });
+          this.save();
+        }
+
         this.isLoaded = true;
-        // Clean database immediately to ensure student accounts are fresh and ready for manual register
-        this.cleanDatabaseForProduction();
         return;
       } catch (err) {
         console.error('Failed to read database file, seeding new database:', err);

@@ -18,7 +18,7 @@
       "role": "faculty",
       "status": "active",
       "created_at": "2026-09-30T17:40:23.567Z",
-      "updated_at": "2026-10-01T09:39:19.428Z"
+      "updated_at": "2026-10-30T18:10:34.706Z"
     },
     {
       "id": "usr_fac_ajit",
@@ -90,29 +90,38 @@
       "created_at": "2026-09-30T17:40:23.567Z",
       "updated_at": "2026-09-30T17:40:23.567Z"
     },
-
     {
-      "id": "usr_1790844635321_0t3w",
-      "name": "Parth Borole",
-      "email": "juu@gmail.com",
-      "password_hash": "$2b$10$F9aROY56c3BmUiZiZvvRX.UAc4IaGDl80LQ40OQxXJvL5o2NRjPA2",
-      "role": "faculty",
+      "id": "usr_std_01",
+      "name": "Aarav Sharma",
+      "email": "student@tsdc.edu.in",
+      "password_hash": "$2b$10$/iDUm4Vk.CsYnaS3JhlmAOk/Vnjl9ux47bMBms7sG6en1/LJ.tLKu",
+      "role": "student",
       "status": "active",
-      "created_at": "2026-10-01T08:50:35.322Z",
-      "updated_at": "2026-10-01T08:50:38.502Z"
+      "created_at": "2026-10-30T14:09:10.075Z",
+      "updated_at": "2026-10-30T14:12:15.443Z"
     },
     {
-      "id": "usr_1790849968117_jr28",
-      "name": "Parth Borole",
-      "email": "aarav.sharma@smartattendance.edu",
-      "password_hash": "$2b$10$cRlHZZH/gRPY8gi7iJlureM2Nbh8UWP5xPDmWaoNoz5ES/eRX3uyi",
-      "role": "admin",
+      "id": "usr_1793371188912_yclk",
+      "name": "Parth",
+      "email": "parth.borole@tsdc.edu.in",
+      "password_hash": "$2b$10$/X9oHueBM9QXjTdPqslpr.ZcASqRBeuOpjAXYCpRhQ3rShpJnpkm.",
+      "role": "faculty",
       "status": "active",
-      "created_at": "2026-10-01T10:19:28.117Z",
-      "updated_at": "2026-10-01T10:19:32.595Z"
+      "created_at": "2026-10-30T14:39:48.912Z",
+      "updated_at": "2026-10-30T14:39:49.789Z"
     }
   ],
-  "students": [],
+  "students": [
+    {
+      "id": "std_01",
+      "user_id": "usr_std_01",
+      "student_id": "TSDC-TYCS-101",
+      "roll_number": "101",
+      "class_id": "cls_tycs_a",
+      "division": "A",
+      "academic_year": "2026-27"
+    }
+  ],
   "faculty": [
     {
       "id": "fac_tuba",
@@ -170,13 +179,12 @@
       "employee_id": "TSDC-FAC-KAJAL",
       "short_code": "KAJAL"
     },
-
     {
-      "id": "fac_1790844635323_7rrn",
-      "user_id": "usr_1790844635321_0t3w",
+      "id": "fac_1793371188913_gj7w",
+      "user_id": "usr_1793371188912_yclk",
       "department": "Computer Science",
-      "employee_id": "1654",
-      "short_code": "1358"
+      "employee_id": "6666",
+      "short_code": "PART"
     }
   ],
   "classes": [
@@ -883,10 +891,230 @@
       "created_at": "2026-10-01T09:39:19.574Z"
     }
   ],
-  "classroom_members": [],
+  "classroom_members": [
+    {
+      "id": "cm_std01_0",
+      "classroom_id": "cr_ai_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    },
+    {
+      "id": "cm_std01_1",
+      "classroom_id": "cr_stqa_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    },
+    {
+      "id": "cm_std01_2",
+      "classroom_id": "cr_eth_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    },
+    {
+      "id": "cm_std01_3",
+      "classroom_id": "cr_dv_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    },
+    {
+      "id": "cm_std01_4",
+      "classroom_id": "cr_aba_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    },
+    {
+      "id": "cm_std01_5",
+      "classroom_id": "cr_iks_tycsa",
+      "student_id": "std_01",
+      "joined_at": "2026-10-30T14:09:10.075Z",
+      "status": "active",
+      "created_at": "2026-10-30T14:09:10.075Z"
+    }
+  ],
   "attendance_sessions": [],
   "attendance_records": [],
-  "otp_verifications": [],
+  "otp_verifications": [
+    {
+      "id": "otp_1793369409404_k2o3",
+      "email": "admin@tsdc.edu.in",
+      "otp_hash": "$2b$08$uJyayMRWqo8JDzlE10l9KuLdy.5xTdkdg8B7kaYrTgsnIJX80jtbu",
+      "expires_at": 1793370009404,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:10:09.404Z"
+    },
+    {
+      "id": "otp_1793369500330_xie9",
+      "email": "student@tsdc.edu.in",
+      "otp_hash": "$2b$08$1t9zcB4jVWXFR6nuHY6NIeYa9WigVZTg6qwl3RhSLJ/y2L4CrW1L2",
+      "expires_at": 1793370100330,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:11:40.330Z"
+    },
+    {
+      "id": "otp_1793369534818_yd2e",
+      "email": "student@tsdc.edu.in",
+      "otp_hash": "$2b$08$EkIYV22lpd1.ag9Axpv77.l9vMzjgaCimfLp622YXF5PGsibj5erS",
+      "expires_at": 1793370134818,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:12:14.818Z"
+    },
+    {
+      "id": "otp_1793370759915_m7e7",
+      "email": "karan.singhania@tsdc.edu.in",
+      "otp_hash": "$2b$08$dPz55xrRq2xuQV0sUJtmXuDOGLEN78YjCZ2pJq1vFHLJkGBTiAUna",
+      "expires_at": 1793371359915,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "registration",
+      "created_at": "2026-10-30T14:32:39.915Z"
+    },
+    {
+      "id": "otp_1793371188941_d38f",
+      "email": "parth.borole@tsdc.edu.in",
+      "otp_hash": "$2b$08$Abi4zdpnxNPGZs2Q1JNWrOhyhu8Dz2umTrHMGJ4Ym1I8sG/Rc4V9S",
+      "expires_at": 1793371788941,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "registration",
+      "created_at": "2026-10-30T14:39:48.941Z"
+    },
+    {
+      "id": "otp_1793371189455_acyp",
+      "email": "parth.borole@tsdc.edu.in",
+      "otp_hash": "$2b$08$FtyXFmOtW0F7.LUhQ.BpouiPA2wPXNlqyjGk4MrxCTsKSNFcvPlP6",
+      "expires_at": 1793371789455,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:39:49.455Z"
+    },
+    {
+      "id": "otp_1793371546196_4jog",
+      "email": "rohan.deshmukh@tsdc.edu.in",
+      "otp_hash": "$2b$08$14AfFqvttiUkYKR7EgYN9ucwx7UW5panxi4Kr.VE46wdvly8P1twy",
+      "expires_at": 1793372146196,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "registration",
+      "created_at": "2026-10-30T14:45:46.196Z"
+    },
+    {
+      "id": "otp_1793371547139_sk86",
+      "email": "rohan.deshmukh@tsdc.edu.in",
+      "otp_hash": "$2b$08$Sku7uqw9SsWd6IEYKKc2juyd4xTQ5hksxpe.571wctgi3iRcoOGMW",
+      "expires_at": 1793372147139,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:45:47.139Z"
+    },
+    {
+      "id": "otp_1793372307957_3l0u",
+      "email": "simran.gupta@tsdc.edu.in",
+      "otp_hash": "$2b$08$N20rWRD5.8VwpZS1ErFZZuZe78g2WI3qeNRc8Bvw8.bD5TPJ05NMu",
+      "expires_at": 1793372907957,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "registration",
+      "created_at": "2026-10-30T14:58:27.957Z"
+    },
+    {
+      "id": "otp_1793372308436_b1mp",
+      "email": "simran.gupta@tsdc.edu.in",
+      "otp_hash": "$2b$08$SEktTefkwENpD6IsPq1CZO.Vfg8y5RC3PIeN7e5Af2goRaWQcBW.G",
+      "expires_at": 1793372908436,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "login",
+      "created_at": "2026-10-30T14:58:28.436Z"
+    },
+    {
+      "id": "otp_1793372639501_ixqr",
+      "email": "rohan.sharma@tsdc.edu.in",
+      "otp_hash": "$2b$08$qZbvCglgPQxiAD.BRMtB5ONUWXRk.T3yy71.FlWsO12jICDXTeoU2",
+      "expires_at": 1793373239501,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "registration",
+      "created_at": "2026-10-30T15:03:59.502Z"
+    },
+    {
+      "id": "otp_1793373301987_v185",
+      "email": "aditya.patil@tsdc.edu.in",
+      "otp_hash": "$2b$08$2l6gJ/IUpj/m2X8ojZN/KurKeVKGGUh3onq4ADVNRDCqNtCGcDk0O",
+      "expires_at": 1793373901987,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "registration",
+      "created_at": "2026-10-30T15:15:01.987Z"
+    },
+    {
+      "id": "otp_1793373312138_8ruc",
+      "email": "aditya.patil@tsdc.edu.in",
+      "otp_hash": "$2b$08$SJKMt.26DvjC9g5.WmqQo.RkUtmDz.kEYXi941saTbOjqQBFadazi",
+      "expires_at": 1793373912138,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "login",
+      "created_at": "2026-10-30T15:15:12.138Z"
+    },
+    {
+      "id": "otp_1793373696973_nk0m",
+      "email": "parthborole2006@gmail.com",
+      "otp_hash": "$2b$08$psCQ/1DL0Xow1/g1Qvnj3u7FfxqvgJMT/AczYLxs2AIGYOV8tB/Mu",
+      "expires_at": 1793374296973,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "registration",
+      "created_at": "2026-10-30T15:21:36.973Z"
+    },
+    {
+      "id": "otp_1793374367453_a8mq",
+      "email": "factester@gmail.com",
+      "otp_hash": "$2b$08$yiX5MB.yCBuY5SbtUJ5LnOwdNorCkzaqLQt1qARC5UIGNoET.Ws2e",
+      "expires_at": 1793374967453,
+      "attempts": 1,
+      "verified": false,
+      "purpose": "registration",
+      "created_at": "2026-10-30T15:32:47.453Z"
+    },
+    {
+      "id": "otp_1793374368621_yilk",
+      "email": "factester@gmail.com",
+      "otp_hash": "$2b$08$P9C2j.FN2IAOdVCPmXfE0ubPAQ7x2R5a3.pGiBT71I1CfypcpQ4hS",
+      "expires_at": 1793374968621,
+      "attempts": 0,
+      "verified": false,
+      "purpose": "login",
+      "created_at": "2026-10-30T15:32:48.622Z"
+    },
+    {
+      "id": "otp_1793383776576_bkra",
+      "email": "tuba@tsdc.edu.in",
+      "otp_hash": "$2b$08$Qe.TZq2SHjmiEqBRo1jrle0eFqyVeMZ7wq0c56uK1b0CE1sC3slV6",
+      "expires_at": 1793384376576,
+      "attempts": 0,
+      "verified": true,
+      "purpose": "login",
+      "created_at": "2026-10-30T18:09:36.576Z"
+    }
+  ],
   "audit_logs": [],
   "institution_settings": {
     "id": "inst_tsdc_01",

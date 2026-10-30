@@ -728,256 +728,145 @@ export const FacultyDashboard: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-stone-100">
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-stone-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setManualSheetSessionId(null);
-                    setShowManualSheetModal(true);
-                  }}
-                  className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 rounded-xl cursor-pointer"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Switch to Manual Roll-Call Sheet</span>
+                  Cancel
                 </button>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 rounded-xl cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isCreatingSession}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-white" />
-                    <span>{isCreatingSession ? 'Starting...' : 'Start Smart Attendance'}</span>
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  disabled={isCreatingSession}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>{isCreatingSession ? 'Starting...' : 'Start Smart Attendance'}</span>
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Top Welcome Bar with Faculty Profile & Stats */}
+      {/* Top Executive Welcome Bar */}
       <div className="bg-white rounded-2xl border border-stone-200/80 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight text-stone-900">
-              Prof. {faculty.name}
-            </h1>
-            <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-stone-900 text-emerald-400 rounded font-mono">
-              Code: {faculty.shortCode}
-            </span>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-stone-900 text-emerald-400 flex items-center justify-center font-bold text-lg shadow-sm border border-stone-800 shrink-0">
+            {faculty.name ? faculty.name.charAt(0).toUpperCase() : 'F'}
           </div>
-          <div className="text-xs text-stone-500 mt-1 flex flex-wrap items-center gap-2">
-            <span>Department: <strong>{faculty.department}</strong></span>
-            <span>·</span>
-            <span>Emp ID: <strong>{faculty.employeeId}</strong></span>
-            <span>·</span>
-            <span>Assigned: <strong className="text-stone-800">{assignedSubjects.map((s: any) => s.subject_name).join(', ')}</strong></span>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-stone-900">
+                {faculty.name.startsWith('Prof.') || faculty.name.startsWith('Dr.') ? faculty.name : `Prof. ${faculty.name}`}
+              </h1>
+              {faculty.shortCode && (
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 bg-stone-900 text-emerald-400 rounded-md font-mono border border-stone-800">
+                  CODE: {faculty.shortCode}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-stone-500 mt-1 flex flex-wrap items-center gap-2 font-medium">
+              <span className="flex items-center gap-1">
+                <School className="w-3.5 h-3.5 text-stone-400" />
+                <span>Department: <strong className="text-stone-800">{faculty.department || 'Computer Science'}</strong></span>
+              </span>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Emp ID: <strong className="text-stone-800">{faculty.employeeId || '1234'}</strong></span>
+              </span>
+              {assignedSubjects && assignedSubjects.length > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Assigned: <strong className="text-stone-800">{assignedSubjects.map((s: any) => s.subject_name).join(', ')}</strong></span>
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {activeSessionId && (
             <button
               onClick={() => setShowRadarModal(true)}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer animate-pulse"
             >
-              <Radio className="w-4 h-4 text-white animate-pulse" />
+              <Radio className="w-4 h-4 text-white" />
               <span>Live Proximity Radar</span>
             </button>
           )}
 
           <button
-            onClick={() => {
-              setManualSheetSessionId(null);
-              setShowManualSheetModal(true);
-            }}
-            className="px-3.5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Manual Roll-Call</span>
-          </button>
-
-          <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2.5 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4.5 py-2.5 bg-stone-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
           >
             <Play className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400" />
-            <span>Start Smart Window</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Interactive Attendance Lifecycle Flow Stepper */}
-      <div className="bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-2xl p-4 sm:p-5 shadow-xs border border-stone-800 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
-              FLOW
-            </div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-200">
-              Attendance Management Lifecycle
-            </h3>
-          </div>
-          <span className="text-[11px] text-stone-400">
-            Click any stage below to jump directly to management or launch attendance
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-          <button
-            onClick={() => {
-              setStructureSubTab('classes');
-              setActiveTab('structure');
-            }}
-            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeTab === 'structure' && structureSubTab === 'classes'
-                ? 'bg-emerald-500/20 border-emerald-400 text-white'
-                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
-            }`}
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 1</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
-              <School className="w-3 h-3 text-stone-400" />
-              <span>Classes & Divs</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Create & manage</div>
-          </button>
-
-          <button
-            onClick={() => {
-              setStructureSubTab('subjects');
-              setActiveTab('structure');
-            }}
-            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeTab === 'structure' && structureSubTab === 'subjects'
-                ? 'bg-emerald-500/20 border-emerald-400 text-white'
-                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
-            }`}
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 2</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
-              <BookOpen className="w-3 h-3 text-indigo-400" />
-              <span>Subjects</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Catalog & codes</div>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('students')}
-            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeTab === 'students'
-                ? 'bg-emerald-500/20 border-emerald-400 text-white'
-                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
-            }`}
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 3</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
-              <GraduationCap className="w-3 h-3 text-emerald-400" />
-              <span>Students</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Enroll & assign</div>
-          </button>
-
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="p-2.5 rounded-xl border bg-stone-800/80 border-stone-700/60 text-stone-300 hover:border-emerald-400 hover:bg-emerald-950/40 text-left transition-all cursor-pointer group"
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 4</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5 text-white group-hover:text-emerald-300">
-              <Play className="w-3 h-3 fill-emerald-400 text-emerald-400" />
-              <span>Start Lecture</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Select Sub + Class + #</div>
-          </button>
-
-          <button
-            onClick={() => {
-              if (activeSessionId) {
-                setShowRadarModal(true);
-              } else {
-                setActiveTab('timetable');
-              }
-            }}
-            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeSessionId
-                ? 'bg-emerald-600/30 border-emerald-400 text-white animate-pulse'
-                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
-            }`}
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 5</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
-              <Radio className="w-3 h-3 text-emerald-400" />
-              <span>Live Radar</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">
-              {activeSessionId ? 'Session in progress' : 'Geofence radius'}
-            </div>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('reports')}
-            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-              activeTab === 'reports' || activeTab === 'history'
-                ? 'bg-emerald-500/20 border-emerald-400 text-white'
-                : 'bg-stone-800/80 border-stone-700/60 text-stone-300 hover:bg-stone-700/60'
-            }`}
-          >
-            <div className="text-[10px] font-mono text-emerald-400 font-bold">STEP 6</div>
-            <div className="text-xs font-bold flex items-center gap-1 mt-0.5">
-              <FileSpreadsheet className="w-3 h-3 text-amber-400" />
-              <span>Reports & Lock</span>
-            </div>
-            <div className="text-[10px] text-stone-400 mt-0.5 truncate">Filter & lock records</div>
+            <span>Start Attendance Window</span>
           </button>
         </div>
       </div>
 
       {/* Overview Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs font-medium">
+        <div className="bg-white p-4.5 rounded-2xl border border-stone-200/80 shadow-xs hover:border-stone-300 transition-all">
+          <div className="flex items-center justify-between text-stone-600 text-xs font-semibold">
             <span>Classes</span>
-            <School className="w-4 h-4 text-stone-400" />
+            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
+              <School className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-stone-900 mt-1.5">{assignedClasses.length}</div>
-          <div className="text-[10px] text-stone-400 mt-0.5 font-medium">Assigned Divisions</div>
+          <div className="text-2xl font-extrabold text-stone-900 mt-2 font-mono">{assignedClasses.length}</div>
+          <div className="text-[10px] text-stone-500 mt-1 font-medium flex items-center justify-between">
+            <span>Assigned Divisions</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-stone-100 rounded font-semibold text-stone-700">Active</span>
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs font-medium">
+        <div className="bg-white p-4.5 rounded-2xl border border-stone-200/80 shadow-xs hover:border-emerald-300 transition-all">
+          <div className="flex items-center justify-between text-stone-600 text-xs font-semibold">
             <span>Classrooms</span>
-            <KeyRound className="w-4 h-4 text-emerald-500" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <KeyRound className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-stone-900 mt-1.5">{classrooms.length}</div>
-          <div className="text-[10px] text-emerald-600 mt-0.5 font-semibold">Active Join Codes</div>
+          <div className="text-2xl font-extrabold text-stone-900 mt-2 font-mono">{classrooms.length}</div>
+          <div className="text-[10px] text-emerald-700 mt-1 font-semibold flex items-center justify-between">
+            <span>Active Join Codes</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-emerald-100 text-emerald-900 rounded font-bold">Ready</span>
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs font-medium">
+        <div className="bg-white p-4.5 rounded-2xl border border-stone-200/80 shadow-xs hover:border-blue-300 transition-all">
+          <div className="flex items-center justify-between text-stone-600 text-xs font-semibold">
             <span>Students Roster</span>
-            <Users className="w-4 h-4 text-blue-500" />
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-stone-900 mt-1.5">{students.length}</div>
-          <div className="text-[10px] text-stone-400 mt-0.5 font-medium">Enrolled in Class</div>
+          <div className="text-2xl font-extrabold text-stone-900 mt-2 font-mono">{students.length}</div>
+          <div className="text-[10px] text-stone-500 mt-1 font-medium flex items-center justify-between">
+            <span>Enrolled Roster</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-blue-50 text-blue-800 rounded font-semibold">Tracked</span>
+          </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs">
-          <div className="flex items-center justify-between text-stone-500 text-xs font-medium">
+        <div className="bg-white p-4.5 rounded-2xl border border-stone-200/80 shadow-xs hover:border-indigo-300 transition-all">
+          <div className="flex items-center justify-between text-stone-600 text-xs font-semibold">
             <span>Lectures Taught</span>
-            <BookOpen className="w-4 h-4 text-indigo-500" />
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <BookOpen className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-stone-900 mt-1.5">{lectureHistory.length}</div>
-          <div className="text-[10px] text-stone-400 mt-0.5 font-medium">Sessions Recorded</div>
+          <div className="text-2xl font-extrabold text-stone-900 mt-2 font-mono">{lectureHistory.length}</div>
+          <div className="text-[10px] text-stone-500 mt-1 font-medium flex items-center justify-between">
+            <span>Sessions Recorded</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-indigo-50 text-indigo-800 rounded font-semibold">Logged</span>
+          </div>
         </div>
       </div>
 
@@ -1114,17 +1003,6 @@ export const FacultyDashboard: React.FC = () => {
               >
                 <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 <span>Sonar Radar HUD</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setManualSheetSessionId(liveSessionData.session.id);
-                  setShowManualSheetModal(true);
-                }}
-                className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer border border-stone-300"
-              >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Manual Roll-Call Sheet</span>
               </button>
 
               <button

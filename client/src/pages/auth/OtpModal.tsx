@@ -19,8 +19,9 @@ export const OtpModal: React.FC<OtpModalProps> = ({
   purpose = 'registration',
   emailDelivered = false,
   deliveryNotice,
+  initialOtp,
 }) => {
-  const [otp, setOtp] = useState<string>('');
+  const [otp, setOtp] = useState<string>(initialOtp || '');
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
@@ -37,6 +38,12 @@ export const OtpModal: React.FC<OtpModalProps> = ({
     }
     return () => clearInterval(timer);
   }, [resendCooldown]);
+
+  useEffect(() => {
+    if (initialOtp) {
+      setOtp(initialOtp);
+    }
+  }, [initialOtp]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();

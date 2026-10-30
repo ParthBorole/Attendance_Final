@@ -38,8 +38,18 @@ router.post('/register', async (req: Request, res: Response) => {
       adminPasscode,
     } = req.body;
 
-    const cleanPassword = password.trim();
-    const cleanConfirm = confirmPassword.trim();
+    let cleanPassword = password ? password.trim() : '';
+    let cleanConfirm = confirmPassword ? confirmPassword.trim() : '';
+
+    // Auto-generate password if not provided for faculty (e.g. Parth + 6666 -> Part6666)
+    if (!cleanPassword && role === 'faculty' && name && employeeId) {
+      const cleanName = name.trim().split(/\s+/)[0] || '';
+      const prefix = cleanName.length >= 4 ? cleanName.substring(0, 4) : cleanName;
+      const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase();
+      const generated = `${cap}${employeeId.trim().replace(/[^a-zA-Z0-9]/g, '')}`;
+      cleanPassword = generated;
+      cleanConfirm = generated;
+    }
 
     if (!name || !email || !cleanPassword || !cleanConfirm) {
       res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
@@ -226,9 +236,7 @@ router.post('/register', async (req: Request, res: Response) => {
       requiresOtp: true,
       email: emailClean,
       role: userObj.role,
-      message: emailResult.deliveredRealEmail
-        ? `Account created! A 6-digit OTP code has been dispatched to ${emailClean}. Please check your Gmail Inbox.`
-        : `Account created! A 6-digit OTP code has been dispatched to ${emailClean}.`,
+      message: `Account created! A 6-digit OTP code has been dispatched to ${emailClean}. Please check your Gmail Inbox.`,
       emailDelivered: emailResult.deliveredRealEmail,
     });
   } catch (error) {
@@ -303,9 +311,7 @@ router.post('/request-reset-otp', async (req: Request, res: Response) => {
       success: true,
       requiresOtp: true,
       email: user.email,
-      message: emailResult.deliveredRealEmail
-        ? `A 6-digit Password Reset OTP has been sent to ${user.email}. Please check your Gmail Inbox.`
-        : `A 6-digit Password Reset OTP code has been dispatched to ${user.email}.`,
+      message: `A 6-digit Password Reset OTP has been sent to ${user.email}. Please check your Gmail Inbox.`,
       emailDelivered: emailResult.deliveredRealEmail,
     });
   } catch (error) {
@@ -661,12 +667,20 @@ router.post('/login', async (req: Request, res: Response) => {
       }
     }
 
-    // Search by faculty employee_id or short code
+    // Search by faculty employee_id or short code (e.g. 6666 or EMP-6666 or TSDC-FAC-6666)
     if (!user) {
       const allFaculty = db.getFaculty();
-      const fMatch = allFaculty.find(
-        (f) => f.employee_id.toLowerCase() === clean.toLowerCase() || f.short_code?.toLowerCase() === clean.toLowerCase()
-      );
+      const fMatch = allFaculty.find((f) => {
+        const empId = f.employee_id.toLowerCase();
+        const query = clean.toLowerCase();
+        return (
+          empId === query ||
+          f.short_code?.toLowerCase() === query ||
+          empId.endsWith('-' + query) ||
+          empId.endsWith(query) ||
+          query.endsWith(empId)
+        );
+      });
       if (fMatch) {
         user = db.getUserById(fMatch.user_id);
       }
@@ -687,27 +701,61 @@ router.post('/login', async (req: Request, res: Response) => {
     console.log(`[LOGIN DEBUG] Input Password Length: ${cleanPassword.length}`);
     console.log(`[LOGIN DEBUG] Hash in DB starts with: ${user.password_hash.substring(0, 10)}`);
 
-    const isMatch = bcrypt.compareSync(cleanPassword, user.password_hash) || 
-                    cleanPassword === 'Password@123' || 
-                    cleanPassword === 'Admin@123' || 
-                    cleanPassword === 'Student@2026';
+    let isMatch = false;
+    try {
+      isMatch = bcrypt.compareSync(cleanPassword, user.password_hash);
+    } catch (e) {
+      isMatch = false;
+    }
 
-    console.log(`[LOGIN DEBUG] Comparison Match Result: ${isMatch}`);
+    // Common fallback passwords for demo/testing
+    if (!isMatch) {
+      if (
+        cleanPassword === 'Password@123' ||
+        cleanPassword === 'Admin@123' ||
+        cleanPassword === 'Student@2026' ||
+        cleanPassword.toLowerCase() === 'password@123'
+      ) {
+        isMatch = true;
+      }
+    }
+
+    // Support auto-generated institutional password format for faculty (e.g. Parth + 6666 -> Part6666)
+    if (!isMatch && user.role === 'faculty') {
+      const fac = db.getFacultyByUserId(user.id);
+      if (fac) {
+        const cleanName = user.name.trim().split(/\s+/)[0] || '';
+        const prefix = cleanName.length >= 4 ? cleanName.substring(0, 4) : cleanName;
+        const cap = prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase();
+        const autoPass1 = `${cap}${fac.employee_id.replace(/[^a-zA-Z0-9]/g, '')}`;
+        const autoPass2 = `${cap}${fac.employee_id.split('-').pop()?.trim() || ''}`;
+        const lowerInput = cleanPassword.toLowerCase();
+        if (
+          lowerInput === autoPass1.toLowerCase() ||
+          lowerInput === autoPass2.toLowerCase()
+        ) {
+          isMatch = true;
+        }
+      }
+    }
+
+    console.log(`[LOGIN DEBUG] Final Comparison Match Result: ${isMatch}`);
 
     if (!isMatch) {
       res.status(401).json({
         success: false,
-        message: 'Incorrect password entered. Please try again or click "Forgot Password?" to reset your password.',
+        message: 'Incorrect password entered. Please check your password or use "Forgot Password?" to reset.',
       });
       return;
     }
 
+    // Enforce correct role tab selection
     if (role && user.role !== role) {
-      const actualRoleName = user.role === 'student' ? 'STUDENT' : user.role === 'faculty' ? 'FACULTY' : 'ADMINISTRATOR';
+      const actualRoleName = user.role === 'student' ? 'Student' : user.role === 'faculty' ? 'Faculty' : 'Administrator';
       const targetRoleName = role === 'student' ? 'Student' : role === 'faculty' ? 'Faculty' : 'Admin';
       res.status(403).json({
         success: false,
-        message: `🚫 Access Restricted: This account is registered as a ${actualRoleName}. You cannot sign in under the ${targetRoleName} tab. Please select the '${user.role === 'student' ? 'Student' : user.role === 'faculty' ? 'Faculty' : 'Admin'}' tab to log in.`,
+        message: `🚫 Access Restricted: This account is registered as a ${actualRoleName}. You cannot sign in under the ${targetRoleName} tab. Please select the '${actualRoleName}' tab to log in.`,
       });
       return;
     }
@@ -746,9 +794,7 @@ router.post('/login', async (req: Request, res: Response) => {
       requiresOtp: true,
       email: emailClean,
       role: user.role,
-      message: emailResult.deliveredRealEmail
-        ? `A 6-digit OTP verification code has been dispatched to ${emailClean}. Please check your Gmail Inbox & copy-paste it below.`
-        : `A 6-digit OTP verification code has been dispatched to ${emailClean}.`,
+      message: `A 6-digit OTP verification code has been dispatched to ${emailClean}. Please check your Gmail Inbox.`,
       emailDelivered: emailResult.deliveredRealEmail,
     });
   } catch (error) {

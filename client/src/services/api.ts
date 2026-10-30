@@ -56,11 +56,11 @@ export class ApiService {
 
       try {
         data = JSON.parse(text);
-        // If parsed JSON has a message and response is not ok, ensure we return data.message
+        // If parsed JSON exists and response is not ok, preserve server's exact error message
         if (!response.ok) {
           return {
             success: false,
-            message: data?.message || (response.status === 403 ? 'Access Denied: Administrator privileges required.' : `Request failed with status ${response.status}`),
+            message: data?.message || `Request failed with status ${response.status}`,
             ...data,
           };
         }
@@ -69,11 +69,7 @@ export class ApiService {
         // Non-JSON response (e.g., HTML during server restart or proxy error)
         let fallbackMessage = 'An unexpected response was received from the server.';
         if (response.status === 403) {
-          if (endpoint.includes('/auth/')) {
-            fallbackMessage = 'Authentication failed. Please check your credentials and try again.';
-          } else {
-            fallbackMessage = 'Access Denied: You do not have permission for this action. Please log in with the appropriate account.';
-          }
+          fallbackMessage = 'Access Denied: You do not have permission for this action.';
         } else if (response.status === 401) {
           fallbackMessage = 'Authentication required or session expired. Please sign in again.';
         } else if (response.status === 404) {

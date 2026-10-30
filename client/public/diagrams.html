@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AttendSecure - Project Diagrams & Charts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-900 min-h-screen">
+  <header class="bg-white border-b border-stone-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-xs">
+          A
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg text-stone-900 leading-tight">AttendSecure Project Diagrams</h1>
+          <p class="text-xs text-stone-500 font-medium">Smart Location-Based Attendance Management System</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/" class="text-xs font-bold text-stone-600 hover:text-stone-900 px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 transition-colors">
+          ← Back to App
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-12">
+    <!-- Use Case Diagram Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-2">
+            UML Diagram
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">1. UML Use Case Diagram</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            System actors (Student, Faculty, Administrator, GPS & Camera Service) and their functional interactions within the AttendSecure boundary.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/use_case_diagram.jpg" download="AttendSecure_Use_Case_Diagram.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/use_case_diagram.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/use_case_diagram.jpg" alt="AttendSecure UML Use Case Diagram" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- Sequence Diagram Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 text-xs font-bold uppercase tracking-wider mb-2">
+            UML Diagram
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">2. UML Sequence Diagram</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            End-to-end chronological message interactions between Student, Frontend Client, GPS & Camera APIs, Backend Server, and Database.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/sequence_diagram.jpg" download="AttendSecure_Sequence_Diagram.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/sequence_diagram.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/sequence_diagram.jpg" alt="AttendSecure UML Sequence Diagram" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- State Diagram Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wider mb-2">
+            UML Diagram
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">3. UML State Machine Diagram</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            Lifecycle of an Attendance Session and Student Verification transitions (Scheduled → Active → Verifying → Present / Rejected → Closed).
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/state_diagram.jpg" download="AttendSecure_State_Diagram.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/state_diagram.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/state_diagram.jpg" alt="AttendSecure UML State Machine Diagram" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- Activity Diagram Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-wider mb-2">
+            UML Diagram
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">4. UML Activity Diagram</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            Step-by-step workflow of Smart Attendance Marking: OTP Login → Active Lecture Selection → GPS Geofence Check (<=50m) → Live Face Verification → Database Persistence.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/activity_diagram.jpg" download="AttendSecure_Activity_Diagram.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/activity_diagram.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/activity_diagram.jpg" alt="AttendSecure UML Activity Diagram" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- DFD Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider mb-2">
+            System Architecture
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">5. Data Flow Diagram (DFD Level 1)</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            Data transformation across Entities (Student, Faculty, Admin, Sensors), Processes (Auth, Session, Geolocation, Face Verification, Analytics), and Data Stores.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/dfd_diagram.jpg" download="AttendSecure_DFD_Level1.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/dfd_diagram.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/dfd_diagram.jpg" alt="AttendSecure Data Flow Diagram Level 1" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- Deployment Diagram Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 text-xs font-bold uppercase tracking-wider mb-2">
+            System Infrastructure
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">6. UML Deployment Diagram</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            Physical deployment architecture: Client Device Node (React SPA + GPS/Camera), Cloud Application Server Node (Node.js/Express API), Database Server Node, and Resend SMTP Email Service.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/deployment_diagram_clean.jpg" download="Fig_3.6_AttendSecure_Deployment_Diagram.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/deployment_diagram_clean.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/deployment_diagram_clean.jpg" alt="Fig.3.6 Deployment Diagram - AttendSecure" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+
+    <!-- Gantt Chart Section -->
+    <section class="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-2">
+            Project Scheduling
+          </div>
+          <h2 class="text-2xl font-extrabold text-stone-900">7. Gantt Chart (August to October 1)</h2>
+          <p class="text-sm text-stone-500 mt-1">
+            Activity durations, dependencies, concurrent workflows, and release milestone (August W1 to October 1 Launch).
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/gantt_chart.jpg" download="AttendSecure_Gantt_Chart_Aug_Oct.jpg" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download High-Res JPG
+          </a>
+          <a href="/gantt_chart.jpg" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+            Open Full Size ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-stone-100/60 rounded-xl p-2 sm:p-4 border border-stone-200 flex justify-center">
+        <img src="/gantt_chart.jpg" alt="AttendSecure Gantt Chart (August to October 1)" class="max-w-full h-auto rounded-lg shadow-sm border border-stone-200 bg-white" />
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-stone-200 bg-white py-6 text-center text-xs text-stone-500">
+    AttendSecure — Smart Location-Based Attendance Management System &copy; 2026. All diagrams ready for documentation.
+  </footer>
+</body>
+</html>
