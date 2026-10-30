@@ -946,30 +946,6 @@ export const FacultyDashboard: React.FC = () => {
           <KeyRound className="w-3.5 h-3.5 text-emerald-400" />
           <span>Classroom Join Codes ({classrooms.length})</span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('roster')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'roster'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5 text-stone-400" />
-          <span>Class Compliance ({students.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('audit')}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'audit'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'
-          }`}
-        >
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-          <span>Audit Trail</span>
-        </button>
       </div>
 
       {/* ACTIVE LIVE ATTENDANCE MONITORING WITH PROXIMITY TELEMETRY & MANUAL OVERRIDE */}

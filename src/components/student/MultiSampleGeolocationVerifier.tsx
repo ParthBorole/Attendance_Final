@@ -21,6 +21,7 @@ import {
   Target,
   Ruler,
   LocateFixed,
+  Sparkles,
 } from 'lucide-react';
 
 export interface LocationReading {
@@ -413,6 +414,9 @@ export const MultiSampleGeolocationVerifier: React.FC<MultiSampleGeolocationVeri
           </button>
         </div>
       )}
+
+
+      {/* 2. PERMISSION DENIED STATE */}
 
       {/* 2. PERMISSION DENIED STATE */}
       {status === 'PERMISSION_DENIED' && (

@@ -28,9 +28,9 @@ const DEFAULT_SETTINGS: InstitutionSettings = {
   college_name: 'Thakur Shyamnarayan Degree College (TSDC), Kandivali (East)',
   official_latitude: 19.213805,
   official_longitude: 72.864810,
-  default_radius: 10,
+  default_radius: 50000,
   min_radius: 1,
-  max_radius: 50,
+  max_radius: 50000,
   low_attendance_threshold: 75,
   updated_at: new Date().toISOString(),
 };

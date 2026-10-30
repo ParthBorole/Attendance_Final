@@ -803,11 +803,11 @@ router.post('/submit-attendance', (req: AuthenticatedRequest, res: Response) => 
       return;
     }
 
-    // Security Check: Timestamp Freshness (prevent stale/replayed GPS)
-    if (locationTimestamp && Math.abs(Date.now() - Number(locationTimestamp)) > 60000) {
+    // Security Check: Timestamp Freshness (prevent stale/replayed GPS) - 5 minute window
+    if (locationTimestamp && Math.abs(Date.now() - Number(locationTimestamp)) > 300000) {
       res.status(400).json({
         success: false,
-        message: 'GPS reading is stale (older than 60 seconds). Please refresh and acquire a live sensor reading.',
+        message: 'GPS reading is stale (older than 5 minutes). Please refresh and acquire a live sensor reading.',
       });
       return;
     }
