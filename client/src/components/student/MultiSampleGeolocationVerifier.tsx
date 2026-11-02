@@ -415,6 +415,28 @@ export const MultiSampleGeolocationVerifier: React.FC<MultiSampleGeolocationVeri
         </div>
       )}
 
+      {/* QUICK DEMO TESTING OVERRIDE (For testing from home) - ALWAYS VISIBLE */}
+      <button
+        type="button"
+        onClick={() => {
+          const mockReading: LocationReading = {
+            latitude: collegeLat,
+            longitude: collegeLng,
+            accuracy: 5,
+            altitude: 10,
+            altitudeAccuracy: 1,
+            heading: null,
+            speed: null,
+            timestamp: Date.now(),
+            sampleNumber: 1,
+          };
+          onLocationVerified(mockReading, 0);
+        }}
+        className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
+      >
+        <Sparkles className="w-4 h-4 text-stone-950" />
+        <span>⚡ Demo Test Mode: Bypass 27km Distance & Verify Instantly</span>
+      </button>
 
       {/* 2. PERMISSION DENIED STATE */}
 
